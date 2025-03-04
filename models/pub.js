@@ -72,33 +72,33 @@ async function deletePublication(id) {
   }
 }
 
-// Actualizar una publicación por ID (solo título y contenido)
+// Actualizar una publicación por ID (solo título y contenido, manteniendo comentarios)
 async function updatePublication(id, title, content) {
   try {
     const pubRef = pubCollection.doc(id);
     const pubSnapshot = await pubRef.get();
 
     if (!pubSnapshot.exists) {
-      throw new Error("Publicación no encontrada");
+      throw new Error(`Publicación con ID ${id} no encontrada.`);
     }
 
     // Obtener los valores actuales de la publicación
     const pubData = pubSnapshot.data();
 
-    // Mantener el autor y la fecha original, y solo actualizar título y contenido
-    await pubRef.update({
-      title,
-      content,
-    });
+    // Solo actualizar título y contenido
+    await pubRef.update({ title, content });
 
     return {
       id,
-      author: pubData.author, // Se mantiene el autor original
+      comentarios: pubData.comentarios ?? [], // Se mantiene la lista de comentarios
+      author: pubData.author, // Mantener el autor original
       title,
       content,
-      datePub: pubData.datePub, // Se mantiene la fecha original
+      datePub: pubData.datePub, // Mantener la fecha original
+      popularidad: pubData.popularidad ?? 0, // Mantener la popularidad (asegurar que no sea undefined)
     };
   } catch (error) {
+    console.error(`Error en updatePublication: ${error.message}`);
     throw new Error(`Error al actualizar la publicación: ${error.message}`);
   }
 }

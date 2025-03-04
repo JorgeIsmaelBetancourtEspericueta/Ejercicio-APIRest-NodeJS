@@ -51,6 +51,17 @@ exports.createPublication = async (req, res) => {
   res.json(newPub);
 };
 
+// Eliminar una publicación
+exports.deletePublication = async (req, res) => {
+  try {
+    const delpub = await deletePublication(req.params.id);
+    res.status(200).json({ message: "Publicación eliminada con éxito" });
+  } catch (error) {
+    res.status(500).json({ message: "Error al eliminar publicación", error });
+  }
+};
+
+
 // Actualizar una publicación existente
 exports.updatePublication = async (req, res) => {
   try {
@@ -65,15 +76,6 @@ exports.updatePublication = async (req, res) => {
   }
 };
 
-// Eliminar una publicación
-exports.deletePublication = async (req, res) => {
-  try {
-    const delpub = await deletePublication(req.params.id);
-    res.status(200).json({ message: "Publicación eliminada con éxito" });
-  } catch (error) {
-    res.status(500).json({ message: "Error al eliminar publicación", error });
-  }
-};
 
 // Agregar un comentario a una publicación
 exports.addCommentToPublication = async (req, res) => {

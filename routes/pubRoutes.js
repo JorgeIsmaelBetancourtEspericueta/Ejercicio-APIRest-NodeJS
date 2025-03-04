@@ -4,8 +4,8 @@ const {
   getPublications,
   getPublicationById,
   addPublication,
-  updateTask,
-  getTaskById,
+  deletePublication,
+  updatePublication,
 } = require("../models/pub"); // Asegúrate de incluir getTaskById
 
 // Obtener todas las publicaciones
@@ -55,12 +55,12 @@ router.post("/", async (req, res) => {
 // Eliminar una tarea específica
 router.delete("/:id", async (req, res) => {
   try {
-    const taskId = req.params.id; // Obtiene el ID de la tarea desde los parámetros
-    await deleteTask(taskId); // Llama a la función para eliminar la tarea
+    const pubId = req.params.id; // Obtiene el ID de la tarea desde los parámetros
+    await deletePublication(pubId); // Llama a la función para eliminar la tarea
 
-    res.status(200).json({ message: "Tarea eliminada correctamente" }); // Respuesta de éxito
+    res.status(200).json({ message: "Publicación eliminada correctamente" }); // Respuesta de éxito
   } catch (error) {
-    console.error("❌ Error al eliminar la tarea:", error);
+    console.error("Error al eliminar la publicación:", error);
     res.status(500).json({ error: error.message }); // Manejo de errores
   }
 });
@@ -68,24 +68,24 @@ router.delete("/:id", async (req, res) => {
 // Actualizar una tarea específica
 router.put("/:id", async (req, res) => {
   try {
-    const taskId = req.params.id; // Obtiene el ID de la tarea desde los parámetros
-    const { title } = req.body; // Obtiene el nuevo título del cuerpo de la solicitud
+    const pubId = req.params.id; // ID de la publicación
+    const { title, content } = req.body; // Datos del cuerpo de la solicitud
 
-    if (!title) {
-      return res.status(400).json({ error: "El título es obligatorio" }); // Verifica que el título esté presente
+    // Validar que el título y contenido no estén vacíos
+    if (!title || !content) {
+      return res
+        .status(400)
+        .json({ error: "Título y contenido son obligatorios" });
     }
 
-    const result = await updateTask(taskId, title); // Llama a la función para actualizar la tarea
+    // Llamar a la función para actualizar la publicación
+    const updatedPub = await updatePublication(pubId, title, content);
 
-    // result contendrá la tarea actualizada, así que puedes devolverla directamente
-    if (result) {
-      res.status(200).json(result); // Respuesta con la tarea actualizada
-    } else {
-      res.status(404).json({ error: "Tarea no encontrada" }); // Manejo de caso donde la tarea no existe
-    }
+    // Responder con el formato correcto
+    res.json(updatedPub);
   } catch (error) {
-    console.error("❌ Error al actualizar la tarea:", error);
-    res.status(500).json({ error: error.message }); // Manejo de errores
+    console.error(`Error en updatePublication: ${error.message}`);
+    res.status(500).json({ error: error.message });
   }
 });
 
