@@ -1,53 +1,32 @@
 const express = require("express");
 const router = express.Router();
 const {
-  getTasks,
-  addTask,
-  deleteTask,
+  getPublications,
+  getPublicationById,
+  addPublication,
   updateTask,
   getTaskById,
-} = require("../models/task"); // Asegúrate de incluir getTaskById
+} = require("../models/pub"); // Asegúrate de incluir getTaskById
 
 // Obtener todas las tareas
 router.get("/", async (req, res) => {
-  try {
-    const tasks = await getTasks(); // Llama a la función para obtener las tareas
-    res.json(tasks); // Devuelve las tareas en formato JSON
-  } catch (error) {
-    res.status(500).json({ error: error.message }); // Manejo de errores
-  }
+  const pubs = await getPublications(); // Llama a la función para obtener las tareas
+  res.json(pubs); // Devuelve las tareas en formato JSON
 });
 
 // Obtener una tarea específica por ID
 router.get("/:id", async (req, res) => {
-  try {
-    const taskId = req.params.id; // Obtiene el ID de la tarea desde los parámetros
-    const task = await getTaskById(taskId); // Llama a la función para obtener la tarea por ID
-
-    if (task) {
-      res.status(200).json(task); // Devuelve la tarea encontrada
-    } else {
-      res.status(404).json({ error: "Tarea no encontrada" }); // Manejo de caso donde la tarea no existe
-    }
-  } catch (error) {
-    console.error("❌ Error al obtener la tarea:", error);
-    res.status(500).json({ error: error.message }); // Manejo de errores
-  }
+  const pubId = req.params.id; // Obtiene el ID de la tarea desde los parámetros
+  const pub = await getPublicationById(pubId); // Llama a la función para obtener la tarea por ID
+  res.json(pub); // Devuelve la tarea encontrada
 });
 
 // Agregar una nueva tarea
 router.post("/", async (req, res) => {
-  try {
-    const { title } = req.body; // Obtiene el título del cuerpo de la solicitud
-    if (!title) {
-      return res.status(400).json({ error: "El título es obligatorio" }); // Verifica que el título esté presente
-    }
+  const { author, title, content } = req.body;
+  const newPub = await addPublication(author, title, content);
+  res.json(newPub);
 
-    const newTask = await addTask(title); // Llama a la función para agregar la tarea
-    res.status(201).json(newTask); // Devuelve la nueva tarea creada
-  } catch (error) {
-    res.status(500).json({ error: error.message }); // Manejo de errores
-  }
 });
 
 // Eliminar una tarea específica
