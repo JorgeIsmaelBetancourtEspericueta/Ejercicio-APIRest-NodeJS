@@ -8,25 +8,48 @@ const {
   getTaskById,
 } = require("../models/pub"); // Asegúrate de incluir getTaskById
 
-// Obtener todas las tareas
+// Obtener todas las publicaciones
 router.get("/", async (req, res) => {
-  const pubs = await getPublications(); // Llama a la función para obtener las tareas
-  res.json(pubs); // Devuelve las tareas en formato JSON
+  try {
+    const pubs = await getPublications();
+    res.json(pubs);
+  } catch (error) {
+    res.status(500).json({ message: "Error al obtener publicaciones", error });
+  }
 });
 
-// Obtener una tarea específica por ID
+// Obtener una publicación específica por ID
 router.get("/:id", async (req, res) => {
-  const pubId = req.params.id; // Obtiene el ID de la tarea desde los parámetros
-  const pub = await getPublicationById(pubId); // Llama a la función para obtener la tarea por ID
-  res.json(pub); // Devuelve la tarea encontrada
+  try {
+    const pubId = req.params.id;
+    const pub = await getPublicationById(pubId);
+
+    if (!pub) {
+      return res.status(404).json({ message: "Publicación no encontrada" });
+    }
+
+    res.json(pub);
+  } catch (error) {
+    res.status(500).json({ message: "Error al obtener la publicación", error });
+  }
 });
 
-// Agregar una nueva tarea
+// Agregar una nueva publicación con validaciones
 router.post("/", async (req, res) => {
-  const { author, title, content } = req.body;
-  const newPub = await addPublication(author, title, content);
-  res.json(newPub);
+  try {
+    const { author, title, content } = req.body;
 
+    if (!author || !title || !content) {
+      return res
+        .status(400)
+        .json({ message: "Todos los campos son obligatorios" });
+    }
+
+    const newPub = await addPublication(author, title, content);
+    res.status(201).json(newPub);
+  } catch (error) {
+    res.status(500).json({ message: "Error al crear la publicación", error });
+  }
 });
 
 // Eliminar una tarea específica
