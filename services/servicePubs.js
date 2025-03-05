@@ -1,5 +1,5 @@
 // services/publicationService.js
-const { pubCollection } = require("../models/publicationModel");
+const { pubCollection } = require("../models/publicacion");
 
 // Obtener todas las publicaciones
 exports.getPublications = async () => {
@@ -192,7 +192,7 @@ exports.updateCommentInPublication = async (pubId, commentIndex, newContent) => 
 // Actualizar los likes de un comentario en una publicación
 exports.updateCommentLikes = async (
   pubId,
-  userId,
+  username,
   commentDate,
   increment = true
 ) => {
@@ -206,7 +206,7 @@ exports.updateCommentLikes = async (
     const comments = pubData.comentarios || [];
     // Buscar el comentario específico por usuario y fecha
     const comment = comments.find(
-      (c) => c.usuario === userId && c.fechaComentario === commentDate
+      (c) => c.usuario === username && c.fechaComentario === commentDate
     );
     if (!comment) {
       throw new Error("Comentario no encontrado");

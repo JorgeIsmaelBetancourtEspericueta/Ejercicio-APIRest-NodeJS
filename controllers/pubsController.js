@@ -1,4 +1,4 @@
-import * as pubServices from '../services/servicePubs';
+const pubServices = require('../services/servicePubs');
 
 // Obtener todas las publicaciones
 exports.getAllPublications = async (req, res) => {
@@ -68,7 +68,7 @@ exports.updatePublication = async (req, res) => {
 exports.addCommentToPublication = async (req, res) => {
   try {
     const comment = await pubServices.addCommentToPublication(
-      req.params.pubId,
+      req.params.idPub,
       req.body.comment
     );
     if (comment) {
@@ -79,12 +79,12 @@ exports.addCommentToPublication = async (req, res) => {
   }
 };
 
-// Agregar un comentario a una publicación
+// Eliminar un comentario a una publicación
 exports.deleteComment = async (req, res) => {
   try {
     const comment = await pubServices.deleteCommentFromPublication(
-      req.params.idpub,
-      req.params.idcom
+      req.params.idPub,
+      req.params.idComment
     );
     if (comment) {
       res.status(201).json(comment);
@@ -93,3 +93,19 @@ exports.deleteComment = async (req, res) => {
     res.status(500).json({ message: "Error al borrar comentario", error });
   }
 };
+
+//Editar un comentario de una publicacion
+exports.updateComment = async (req, res) =>{
+  try{
+    const idPub = req.params.idPub;
+    const idComment = req.params.idComment;
+    const newContent = req.body;
+    const comment = await pubServices.updateCommentInPublication(idPub, idComment, newContent);
+    if(comment){
+      res.status(201).json(comment);
+    }
+  }catch(error){
+    res.status(500).json({message: "Error al borrar el comentario"});
+  }
+};
+
