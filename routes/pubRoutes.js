@@ -21,7 +21,6 @@ router.get("/publication/", controllerPubs.getAllPublications); // Obtener todas
  */
 router.get("/publication/:id", controllerPubs.getPublicationById); // Obtener una publicación específica por ID
 
-
 /**
  * @route POST /publication
  * @description Crea una nueva publicación con los datos proporcionados.
@@ -35,7 +34,6 @@ router.get("/publication/:id", controllerPubs.getPublicationById); // Obtener un
  */
 router.post("/publication", controllerPubs.createPublication); //Agrega una nueva publicación
 
-
 /**
  * @route DELETE /publication/:id
  * @description Elimina una publicación por su ID.
@@ -45,7 +43,6 @@ router.post("/publication", controllerPubs.createPublication); //Agrega una nuev
  */
 router.delete("/publication/:id", controllerPubs.deletePublication); // Eliminar una publicación
 
-
 /**
  * @route PUT /publication/:id
  * @description Actualiza una publicación existente por su ID.
@@ -54,7 +51,7 @@ router.delete("/publication/:id", controllerPubs.deletePublication); // Eliminar
  * @returns {Object} 201 - Publicación actualizada exitosamente.
  * @returns {Object} 500 - Mensaje de error si ocurre un problema en la actualización.
  */
-router.put("publication/:id", controllerPubs.updatePublication);
+router.put("/publication/:id", controllerPubs.updatePublication);
 
 //Agregar un comentario a una publicacion
 router.post(
@@ -70,7 +67,7 @@ router.delete(
 
 //Actualizar comentario de una publicacion
 router.put(
-  "/publication/:idPub/comment/:idComment",
+  "publication/:idPub/comment/:idComment",
   controllerPubs.updateComment
 );
 

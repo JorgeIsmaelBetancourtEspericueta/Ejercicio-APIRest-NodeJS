@@ -1,4 +1,4 @@
-const pubServices = require('../services/servicePubs');
+const pubServices = require("../services/servicePubs");
 
 // Obtener todas las publicaciones
 exports.getAllPublications = async (req, res) => {
@@ -48,21 +48,18 @@ exports.deletePublication = async (req, res) => {
   }
 };
 
-
 // Actualizar una publicación existente
 exports.updatePublication = async (req, res) => {
   try {
-    const pub = await pubServices.updatePublication(
-      req.params.id,
-      { title: req.body.title },
-      { content: req.body.content }
-    );
-    res.status(201).json(pub);
+    const pub = await pubServices.updatePublication(req.params.id, {
+      title: req.body.title,
+      content: req.body.content,
+    });
+    res.status(200).json(pub); // Cambié el código de estado a 200 (OK)
   } catch (error) {
     res.status(500).json({ message: "Error al actualizar publicación", error });
   }
 };
-
 
 // Agregar un comentario a una publicación
 exports.addCommentToPublication = async (req, res) => {
@@ -95,17 +92,20 @@ exports.deleteComment = async (req, res) => {
 };
 
 //Editar un comentario de una publicacion
-exports.updateComment = async (req, res) =>{
-  try{
+exports.updateComment = async (req, res) => {
+  try {
     const idPub = req.params.idPub;
     const idComment = req.params.idComment;
     const newContent = req.body;
-    const comment = await pubServices.updateCommentInPublication(idPub, idComment, newContent);
-    if(comment){
+    const comment = await pubServices.updateCommentInPublication(
+      idPub,
+      idComment,
+      newContent
+    );
+    if (comment) {
       res.status(201).json(comment);
     }
-  }catch(error){
-    res.status(500).json({message: "Error al borrar el comentario"});
+  } catch (error) {
+    res.status(500).json({ message: "Error al borrar el comentario" });
   }
 };
-

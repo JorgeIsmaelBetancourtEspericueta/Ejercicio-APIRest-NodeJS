@@ -9,7 +9,7 @@ exports.getPublications = async () => {
   } catch (error) {
     throw new Error(`Error al obtener publicaciones: ${error.message}`);
   }
-}
+};
 
 // Obtener una publicación específica por ID
 exports.getPublicationById = async (id) => {
@@ -27,7 +27,7 @@ exports.getPublicationById = async (id) => {
     console.error("Error en getPublicationById:", error);
     throw new Error(`Error al obtener la publicación: ${error.message}`);
   }
-}
+};
 
 // Agregar una nueva publicación
 exports.addPublication = async (author, title, content) => {
@@ -52,7 +52,7 @@ exports.addPublication = async (author, title, content) => {
     comentarios: [],
     popularidad: 0,
   };
-}
+};
 
 // Eliminar una publicación por ID
 exports.deletePublication = async (id) => {
@@ -69,10 +69,10 @@ exports.deletePublication = async (id) => {
   } catch (error) {
     throw new Error(`Error al eliminar la publicación: ${error.message}`);
   }
-}
+};
 
 // Actualizar una publicación por ID (solo título y contenido, manteniendo comentarios)
-exports.updatePublication = async (id, title, content) => {
+exports.updatePublication = async (id, { title, content }) => {
   try {
     const pubRef = pubCollection.doc(id);
     const pubSnapshot = await pubRef.get();
@@ -84,23 +84,26 @@ exports.updatePublication = async (id, title, content) => {
     // Obtener los valores actuales de la publicación
     const pubData = pubSnapshot.data();
 
-    // Solo actualizar título y contenido
-    await pubRef.update({ title, content });
+    // Actualizar solo el título y el contenido
+    await pubRef.update({
+      title: title,
+      content: content,
+    });
 
     return {
       id,
-      comentarios: pubData.comentarios ?? [], // Se mantiene la lista de comentarios
-      author: pubData.author, // Mantener el autor original
+      comentarios: pubData.comentarios ?? [],
+      author: pubData.author,
       title,
       content,
-      datePub: pubData.datePub, // Mantener la fecha original
-      popularidad: pubData.popularidad ?? 0, // Mantener la popularidad (asegurar que no sea undefined)
+      datePub: pubData.datePub,
+      popularidad: pubData.popularidad ?? 0,
     };
   } catch (error) {
     console.error(`Error en updatePublication: ${error.message}`);
     throw new Error(`Error al actualizar la publicación: ${error.message}`);
   }
-}
+};
 
 // Agregar un comentario a una publicación
 exports.addCommentToPublication = async (pubId, comment) => {
@@ -131,7 +134,7 @@ exports.addCommentToPublication = async (pubId, comment) => {
   } catch (error) {
     throw new Error(`Error al agregar comentario: ${error.message}`);
   }
-}
+};
 
 // Eliminar un comentario de una publicación
 exports.deleteCommentFromPublication = async (pubId, commentIndex) => {
@@ -159,10 +162,14 @@ exports.deleteCommentFromPublication = async (pubId, commentIndex) => {
   } catch (error) {
     throw new Error(`Error al eliminar comentario: ${error.message}`);
   }
-}
+};
 
 // Actualizar un comentario en una publicación
-exports.updateCommentInPublication = async (pubId, commentIndex, newContent) => {
+exports.updateCommentInPublication = async (
+  pubId,
+  commentIndex,
+  newContent
+) => {
   try {
     const pubRef = pubCollection.doc(pubId);
     const pubSnapshot = await pubRef.get();
@@ -187,7 +194,7 @@ exports.updateCommentInPublication = async (pubId, commentIndex, newContent) => 
   } catch (error) {
     throw new Error(`Error al actualizar comentario: ${error.message}`);
   }
-}
+};
 
 // Actualizar los likes de un comentario en una publicación
 exports.updateCommentLikes = async (
@@ -228,19 +235,22 @@ exports.updateCommentLikes = async (
       `Error al actualizar likes del comentario: ${error.message}`
     );
   }
-}
+};
 
 // Obtener las 5 publicaciones más populares
 exports.getTrend = async () => {
   try {
-    const snapshot = await pubCollection.orderBy("popularidad", "desc").limit(5).get();
+    const snapshot = await pubCollection
+      .orderBy("popularidad", "desc")
+      .limit(5)
+      .get();
     return snapshot;
   } catch (error) {
     throw new Error(
       `Error al obtener publicaciones más populares: ${error.message}`
     );
   }
-}
+};
 
 // Función para agregar un "like" a un comentario en una publicación
 exports.likeComment = async (pubId, usuario, fechaComentario) => {
@@ -273,7 +283,7 @@ exports.likeComment = async (pubId, usuario, fechaComentario) => {
   } catch (error) {
     throw new Error(`Error al dar like al comentario: ${error.message}`);
   }
-}
+};
 
 // Función para quitar un "like" de un comentario en una publicación
 exports.unlikeComment = async (pubId, usuario, fechaComentario) => {
@@ -306,4 +316,4 @@ exports.unlikeComment = async (pubId, usuario, fechaComentario) => {
   } catch (error) {
     throw new Error(`Error al quitar like al comentario: ${error.message}`);
   }
-}
+};
