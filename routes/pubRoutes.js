@@ -55,20 +55,23 @@ router.put("/publication/:id", controllerPubs.updatePublication);
 
 //Agregar un comentario a una publicacion
 router.post(
-  "publication/:idPub/comment",
+  "/publication/:idPub/comment",
   controllerPubs.addCommentToPublication
 );
 
 //Eliminar un comentario de una publicacion
 router.delete(
-  "publication/:idPub/comment/:idComment",
+  "/publication/:idPub/comment/:idComment",
   controllerPubs.deleteComment
 );
 
 //Actualizar comentario de una publicacion
 router.put(
-  "publication/:idPub/comment/:idComment",
+  "/publication/:idPub/comment/:idComment",
   controllerPubs.updateComment
 );
+
+//Obtener las publicaciones mas populares
+router.get('/publication/trends/', controllerPubs.getMostTrend);
 
 module.exports = router; // Exporta el router

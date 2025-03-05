@@ -64,15 +64,19 @@ exports.updatePublication = async (req, res) => {
 // Agregar un comentario a una publicación
 exports.addCommentToPublication = async (req, res) => {
   try {
+    const content = {
+      usuario: req.body.user,
+      contenido: req.body.content
+    }
     const comment = await pubServices.addCommentToPublication(
       req.params.idPub,
-      req.body.comment
+      content
     );
     if (comment) {
       res.status(201).json(comment);
     }
   } catch (error) {
-    res.status(500).json({ message: "Error al agregar comentario", error });
+    res.status(500).json({ message: "Error al agregar comentario" });
   }
 };
 
@@ -109,3 +113,16 @@ exports.updateComment = async (req, res) => {
     res.status(500).json({ message: "Error al borrar el comentario" });
   }
 };
+
+exports.getMostTrend = async (res) => {
+  try{
+    const trend = await pubServices.getTrend();
+  if(trend){
+    res.status(201).json(trend);
+  }else{
+    res.status(404).json({message: "No hay publicaciones populares"});
+  }
+  }catch(error){
+    res.status(500).json({message: "Error al obtener las publicaciones populares"});
+  }
+}
