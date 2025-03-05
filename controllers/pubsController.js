@@ -1,22 +1,9 @@
-const {
-  getPublications,
-  getPublicationById,
-  addPublication,
-  deletePublication,
-  updatePublication,
-  addCommentToPublication,
-  deleteCommentFromPublication,
-  updateCommentInPublication,
-  getTrend,
-  updateCommentLikes,
-  likeComment,
-  unlikeComment,
-} = require("../models/pub");
+import * as pubServices from '../services/servicePubs';
 
 // Obtener todas las publicaciones
 exports.getAllPublications = async (req, res) => {
   try {
-    const pub = await getPublications();
+    const pub = await pubServices.getPublications();
     if (pub) {
       res.status(200).json(pub);
     } else {
@@ -30,7 +17,7 @@ exports.getAllPublications = async (req, res) => {
 // Obtener una publicación por ID
 exports.getPublicationById = async (req, res) => {
   try {
-    const pub = await getPublicationById(req.params.id);
+    const pub = await pubServices.getPublicationById(req.params.id);
     if (pub) {
       res.status(200).json(pub);
     } else {
@@ -43,7 +30,7 @@ exports.getPublicationById = async (req, res) => {
 
 // Crear una nueva publicación
 exports.createPublication = async (req, res) => {
-  const newPub = await addPublication(
+  const newPub = await pubServices.addPublication(
     req.body.author,
     req.body.title,
     req.body.content
@@ -54,7 +41,7 @@ exports.createPublication = async (req, res) => {
 // Eliminar una publicación
 exports.deletePublication = async (req, res) => {
   try {
-    const delpub = await deletePublication(req.params.id);
+    const delpub = await pubServices.deletePublication(req.params.id);
     res.status(200).json({ message: "Publicación eliminada con éxito" });
   } catch (error) {
     res.status(500).json({ message: "Error al eliminar publicación", error });
@@ -65,7 +52,7 @@ exports.deletePublication = async (req, res) => {
 // Actualizar una publicación existente
 exports.updatePublication = async (req, res) => {
   try {
-    const pub = await updatePublication(
+    const pub = await pubServices.updatePublication(
       req.params.id,
       { title: req.body.title },
       { content: req.body.content }
@@ -80,7 +67,7 @@ exports.updatePublication = async (req, res) => {
 // Agregar un comentario a una publicación
 exports.addCommentToPublication = async (req, res) => {
   try {
-    const comment = await addCommentToPublication(
+    const comment = await pubServices.addCommentToPublication(
       req.params.pubId,
       req.body.comment
     );
@@ -95,7 +82,7 @@ exports.addCommentToPublication = async (req, res) => {
 // Agregar un comentario a una publicación
 exports.deleteComment = async (req, res) => {
   try {
-    const comment = await deleteCommentFromPublication(
+    const comment = await pubServices.deleteCommentFromPublication(
       req.params.idpub,
       req.params.idcom
     );

@@ -1,9 +1,8 @@
-const { db } = require("../firebaseConfig.js");
-
-const pubCollection = db.collection("publications");
+// services/publicationService.js
+const { pubCollection } = require("../models/publicationModel");
 
 // Obtener todas las publicaciones
-async function getPublications() {
+exports.getPublications = async () => {
   try {
     const snapshot = await pubCollection.get();
     return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
@@ -13,7 +12,7 @@ async function getPublications() {
 }
 
 // Obtener una publicación específica por ID
-async function getPublicationById(id) {
+exports.getPublicationById = async (id) => {
   try {
     console.log("Buscando publicación con ID:", id);
     const pubRef = pubCollection.doc(id);
@@ -31,8 +30,8 @@ async function getPublicationById(id) {
 }
 
 // Agregar una nueva publicación
-async function addPublication(author, title, content) {
-  console.log("Añadiendo publicación:", { author, title, content }); // ✅ Verifica los datos antes de enviar a Firebase
+exports.addPublication = async (author, title, content) => {
+  console.log("Añadiendo publicación:", { author, title, content });
 
   const datePub = new Date().toISOString();
   const newPub = await pubCollection.add({
@@ -56,7 +55,7 @@ async function addPublication(author, title, content) {
 }
 
 // Eliminar una publicación por ID
-async function deletePublication(id) {
+exports.deletePublication = async (id) => {
   try {
     const pubRef = pubCollection.doc(id);
     const pubSnapshot = await pubRef.get();
@@ -73,7 +72,7 @@ async function deletePublication(id) {
 }
 
 // Actualizar una publicación por ID (solo título y contenido, manteniendo comentarios)
-async function updatePublication(id, title, content) {
+exports.updatePublication = async (id, title, content) => {
   try {
     const pubRef = pubCollection.doc(id);
     const pubSnapshot = await pubRef.get();
@@ -104,7 +103,7 @@ async function updatePublication(id, title, content) {
 }
 
 // Agregar un comentario a una publicación
-async function addCommentToPublication(pubId, comment) {
+exports.addCommentToPublication = async (pubId, comment) => {
   try {
     const pubRef = pubCollection.doc(pubId);
     const pubSnapshot = await pubRef.get();
@@ -135,7 +134,7 @@ async function addCommentToPublication(pubId, comment) {
 }
 
 // Eliminar un comentario de una publicación
-async function deleteCommentFromPublication(pubId, commentIndex) {
+exports.deleteCommentFromPublication = async (pubId, commentIndex) => {
   try {
     const pubRef = pubCollection.doc(pubId);
     const pubSnapshot = await pubRef.get();
@@ -163,7 +162,7 @@ async function deleteCommentFromPublication(pubId, commentIndex) {
 }
 
 // Actualizar un comentario en una publicación
-async function updateCommentInPublication(pubId, commentIndex, newContent) {
+exports.updateCommentInPublication = async (pubId, commentIndex, newContent) => {
   try {
     const pubRef = pubCollection.doc(pubId);
     const pubSnapshot = await pubRef.get();
@@ -191,12 +190,12 @@ async function updateCommentInPublication(pubId, commentIndex, newContent) {
 }
 
 // Actualizar los likes de un comentario en una publicación
-async function updateCommentLikes(
+exports.updateCommentLikes = async (
   pubId,
   userId,
   commentDate,
   increment = true
-) {
+) => {
   try {
     const pubRef = pubCollection.doc(pubId);
     const pubSnapshot = await pubRef.get();
@@ -232,17 +231,10 @@ async function updateCommentLikes(
 }
 
 // Obtener las 5 publicaciones más populares
-async function getTrend() {
+exports.getTrend = async () => {
   try {
-    const snapshot = await pubCollection.get();
-
-    // Ordenar por popularidad en orden descendente y tomar las primeras 5
-    const trendingPosts = snapshot.docs
-      .map((doc) => ({ id: doc.id, ...doc.data() })) // Convertir documentos a objetos
-      .sort((a, b) => b.popularidad - a.popularidad) // Ordenar por popularidad descendente
-      .slice(0, 5); // Tomar los primeros 5
-
-    return trendingPosts;
+    const snapshot = await pubCollection.orderBy("popularidad", "desc").limit(5).get();
+    return snapshot;
   } catch (error) {
     throw new Error(
       `Error al obtener publicaciones más populares: ${error.message}`
@@ -251,7 +243,7 @@ async function getTrend() {
 }
 
 // Función para agregar un "like" a un comentario en una publicación
-async function likeComment(pubId, usuario, fechaComentario) {
+exports.likeComment = async (pubId, usuario, fechaComentario) => {
   try {
     const pubRef = pubCollection.doc(pubId);
     const pubSnapshot = await pubRef.get();
@@ -284,7 +276,7 @@ async function likeComment(pubId, usuario, fechaComentario) {
 }
 
 // Función para quitar un "like" de un comentario en una publicación
-async function unlikeComment(pubId, usuario, fechaComentario) {
+exports.unlikeComment = async (pubId, usuario, fechaComentario) => {
   try {
     const pubRef = pubCollection.doc(pubId);
     const pubSnapshot = await pubRef.get();
@@ -315,18 +307,3 @@ async function unlikeComment(pubId, usuario, fechaComentario) {
     throw new Error(`Error al quitar like al comentario: ${error.message}`);
   }
 }
-
-module.exports = {
-  getPublications,
-  getPublicationById,
-  addPublication,
-  deletePublication,
-  updatePublication,
-  addCommentToPublication,
-  deleteCommentFromPublication,
-  updateCommentInPublication,
-  getTrend,
-  updateCommentLikes,
-  likeComment,
-  unlikeComment,
-};
