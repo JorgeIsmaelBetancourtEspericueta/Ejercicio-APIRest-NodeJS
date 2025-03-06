@@ -30,12 +30,21 @@ exports.getPublicationById = async (req, res) => {
 
 // Crear una nueva publicación
 exports.createPublication = async (req, res) => {
-  const newPub = await pubServices.addPublication(
-    req.body.author,
-    req.body.title,
-    req.body.content
-  );
-  res.json(newPub);
+  try {
+    const newPub = await pubServices.addPublication(
+      req.body.author,
+      req.body.title,
+      req.body.content
+    );
+
+    if (newPub) {
+      res.status(201).json(newPub); // 201 indica que el recurso fue creado correctamente
+    } else {
+      res.status(400).json({ message: "No se pudo crear la publicación" }); // 400 si hay un error en la solicitud
+    }
+  } catch (error) {
+    res.status(500).json({ message: "Error al crear la publicación", error });
+  }
 };
 
 // Eliminar una publicación
@@ -44,15 +53,20 @@ exports.deletePublication = async (req, res) => {
     const delpub = await pubServices.deletePublication(req.params.id);
 
     if (delpub.success) {
-      return res.status(200).json({ message: "Publicación borrada con éxito", data: delpub });
+      return res
+        .status(200)
+        .json({ message: "Publicación borrada con éxito", data: delpub });
     } else {
-      return res.status(404).json({ message: "Publicación no encontrada", data: delpub });
+      return res
+        .status(404)
+        .json({ message: "Publicación no encontrada", data: delpub });
     }
   } catch (error) {
-    return res.status(500).json({ message: "Error al eliminar publicación", error: error.message });
+    return res
+      .status(500)
+      .json({ message: "Error al eliminar publicación", error: error.message });
   }
 };
-
 
 // Actualizar una publicación existente
 exports.updatePublication = async (req, res) => {
@@ -76,19 +90,19 @@ exports.getComments = async (req, res) => {
 
     res.status(200).json({ comentarios: comments });
   } catch (error) {
-    res.status(500).json({ message: "Error al obtener los comentarios", error });
+    res
+      .status(500)
+      .json({ message: "Error al obtener los comentarios", error });
   }
 };
-
-
 
 // Agregar un comentario a una publicación
 exports.addCommentToPublication = async (req, res) => {
   try {
     const content = {
       usuario: req.body.user,
-      contenido: req.body.content
-    }
+      contenido: req.body.content,
+    };
     const comment = await pubServices.addCommentToPublication(
       req.params.idPub,
       content
@@ -142,17 +156,26 @@ exports.updateLikeComment = async (req, res) => {
     const increment = req.body.increment;
 
     if (typeof increment !== "boolean") {
-      return res.status(400).json({ message: "El parámetro 'increment' debe ser booleano (true o false)." });
+      return res
+        .status(400)
+        .json({
+          message: "El parámetro 'increment' debe ser booleano (true o false).",
+        });
     }
 
-    const likeComment = await pubServices.updateCommentLikes(pubId, idComment, increment);
+    const likeComment = await pubServices.updateCommentLikes(
+      pubId,
+      idComment,
+      increment
+    );
 
     return res.status(200).json(likeComment);
   } catch (error) {
-    return res.status(500).json({ message: "No se pudo cambiar el like.", error: error.message });
+    return res
+      .status(500)
+      .json({ message: "No se pudo cambiar el like.", error: error.message });
   }
 };
-
 
 exports.getMostTrend = async (res) => {
   try {
@@ -163,6 +186,8 @@ exports.getMostTrend = async (res) => {
       res.status(404).json({ message: "No hay publicaciones populares" });
     }
   } catch (error) {
-    res.status(500).json({ message: "Error al obtener las publicaciones populares" });
+    res
+      .status(500)
+      .json({ message: "Error al obtener las publicaciones populares" });
   }
-}
+};
