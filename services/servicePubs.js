@@ -61,15 +61,16 @@ exports.deletePublication = async (id) => {
     const pubSnapshot = await pubRef.get();
 
     if (!pubSnapshot.exists) {
-      throw new Error("Publicación no encontrada");
+      return { success: false, message: "Publicación no encontrada" };
     }
 
     await pubRef.delete();
-    return { success: true };
+    return { success: true, message: "Publicación eliminada correctamente" };
   } catch (error) {
-    throw new Error(`Error al eliminar la publicación: ${error.message}`);
+    return { success: false, message: `Error al eliminar la publicación: ${error.message}` };
   }
 };
+
 
 // Actualizar una publicación por ID (solo título y contenido, manteniendo comentarios)
 exports.updatePublication = async (id, { title, content }) => {
@@ -105,6 +106,25 @@ exports.updatePublication = async (id, { title, content }) => {
   }
 };
 
+//Consultar los comentarios de una puublicacion
+exports.getCommentsByPublication = async (pubId) => {
+  try {
+    const pubRef = pubCollection.doc(pubId);
+    const pubSnapshot = await pubRef.get();
+
+    if (!pubSnapshot.exists) {
+      throw new Error("Publicación no encontrada");
+    }
+
+    let pubData = pubSnapshot.data();
+    let comentarios = pubData.comentarios || []; // Si no hay comentarios, retorna un array vacío
+
+    return comentarios;
+  } catch (error) {
+    throw new Error(`Error al obtener los comentarios: ${error.message}`);
+  }
+};
+
 // Agregar un comentario a una publicación
 exports.addCommentToPublication = async (pubId, comment) => {
   try {
@@ -116,28 +136,38 @@ exports.addCommentToPublication = async (pubId, comment) => {
     }
 
     const pubData = pubSnapshot.data();
+    const comentarios = pubData.comentarios || []; // Obtener comentarios existentes o inicializar vacío
+
+    // Determinar el ID autoincrementable
+    const newCommentId = comentarios.length > 0
+      ? Math.max(...comentarios.map(c => c.id)) + 1
+      : 1;
 
     // Crear nuevo comentario con la estructura requerida
     const newComment = {
+      id: newCommentId, // Asignar ID autoincrementable
       usuario: comment.usuario,
       contenido: comment.contenido,
-      fechaComentario: new Date().toISOString(), // Agregar fecha actual
-      likes: 0, // Inicializar en 0
+      fechaComentario: new Date().toISOString(),
+      likes: 0,
     };
 
-    // Actualizar lista de comentarios
-    const updatedComments = [...(pubData.comentarios || []), newComment];
+    // Agregar el comentario a la lista
+    comentarios.push(newComment);
 
-    await pubRef.update({ comentarios: updatedComments });
+    // Guardar los comentarios actualizados en la publicación
+    await pubRef.update({ comentarios });
 
-    return { id: pubId, comentarios: updatedComments };
+    return newComment;
   } catch (error) {
-    throw new Error(`Error al agregar comentario: ${error.message}`);
+    console.error("Error al agregar comentario:", error);
+    throw error;
   }
 };
 
+
 // Eliminar un comentario de una publicación
-exports.deleteCommentFromPublication = async (pubId, commentIndex) => {
+exports.deleteCommentFromPublication = async (pubId, commentId) => {
   try {
     const pubRef = pubCollection.doc(pubId);
     const pubSnapshot = await pubRef.get();
@@ -147,29 +177,26 @@ exports.deleteCommentFromPublication = async (pubId, commentIndex) => {
     }
 
     let pubData = pubSnapshot.data();
-    if (
-      !pubData.comentarios ||
-      commentIndex < 0 ||
-      commentIndex >= pubData.comentarios.length
-    ) {
+    let comentarios = pubData.comentarios || [];
+
+    // Filtrar comentarios, eliminando el que coincida con el commentId
+    const newComments = comentarios.filter(comment => comment.id !== commentId);
+
+    if (newComments.length === comentarios.length) {
       throw new Error("Comentario no encontrado");
     }
 
-    pubData.comentarios.splice(commentIndex, 1);
-    await pubRef.update({ comentarios: pubData.comentarios });
+    await pubRef.update({ comentarios: newComments });
 
-    return { id: pubId, comentarios: pubData.comentarios };
+    return { id: pubId, comentarios: newComments };
   } catch (error) {
     throw new Error(`Error al eliminar comentario: ${error.message}`);
   }
 };
 
+
 // Actualizar un comentario en una publicación
-exports.updateCommentInPublication = async (
-  pubId,
-  commentIndex,
-  newContent
-) => {
+exports.updateCommentInPublication = async (pubId, commentId, newContent) => {
   try {
     const pubRef = pubCollection.doc(pubId);
     const pubSnapshot = await pubRef.get();
@@ -179,63 +206,67 @@ exports.updateCommentInPublication = async (
     }
 
     let pubData = pubSnapshot.data();
-    if (
-      !pubData.comentarios ||
-      commentIndex < 0 ||
-      commentIndex >= pubData.comentarios.length
-    ) {
+    let comentarios = pubData.comentarios || [];
+
+    // Buscar el índice del comentario a actualizar
+    const commentIndex = comentarios.findIndex(comment => comment.id === commentId);
+    
+    if (commentIndex === -1) {
       throw new Error("Comentario no encontrado");
     }
 
-    pubData.comentarios[commentIndex].contenido = newContent;
-    await pubRef.update({ comentarios: pubData.comentarios });
+    // Actualizar el contenido del comentario
+    comentarios[commentIndex] = {
+      ...comentarios[commentIndex],
+      contenido: newContent,
+      fechaModificacion: new Date().toISOString(), // Agregar fecha de modificación
+    };
 
-    return { id: pubId, comentarios: pubData.comentarios };
+    await pubRef.update({ comentarios });
+
+    return { id: pubId, comentarios };
   } catch (error) {
     throw new Error(`Error al actualizar comentario: ${error.message}`);
   }
 };
 
+
 // Actualizar los likes de un comentario en una publicación
-exports.updateCommentLikes = async (
-  pubId,
-  username,
-  commentDate,
-  increment = true
-) => {
+//Funciona para agregar o quitar comentarios
+exports.updateCommentLikes = async (pubId, commentId, increment) => {
   try {
     const pubRef = pubCollection.doc(pubId);
     const pubSnapshot = await pubRef.get();
+
     if (!pubSnapshot.exists) {
       throw new Error("Publicación no encontrada");
     }
+
     let pubData = pubSnapshot.data();
-    const comments = pubData.comentarios || [];
-    // Buscar el comentario específico por usuario y fecha
-    const comment = comments.find(
-      (c) => c.usuario === username && c.fechaComentario === commentDate
-    );
-    if (!comment) {
+    let comentarios = pubData.comentarios || [];
+
+    // Intentar convertir el ID en string para evitar problemas de comparación
+    const commentIndex = comentarios.findIndex(c => (c.id) === (commentId));
+
+    if (commentIndex === -1) {
       throw new Error("Comentario no encontrado");
     }
-    // Incrementar o decrementar los likes
-    if (increment) {
-      comment.likes += 1;
-    } else {
-      // Asegurarse de que no se dejen likes negativos
-      if (comment.likes > 0) {
-        comment.likes -= 1;
-      }
-    }
-    // Actualizar la lista de comentarios en la base de datos
-    await pubRef.update({ comentarios: comments });
-    return { id: pubId, comentarios: comments };
+
+    // Asegurar que los likes no sean undefined
+    comentarios[commentIndex].likes = (comentarios[commentIndex].likes || 0) + (increment ? 1 : -1);
+    comentarios[commentIndex].likes = Math.max(0, comentarios[commentIndex].likes);  // Evitar negativos
+
+    // Guardar cambios en la base de datos
+    await pubRef.update({ comentarios });
+
+    return { id: pubId, comentarios };
   } catch (error) {
-    throw new Error(
-      `Error al actualizar likes del comentario: ${error.message}`
-    );
+    throw new Error(`Error al actualizar likes del comentario: ${error.message}`);
   }
 };
+
+
+
 
 // Obtener las 5 publicaciones más populares
 exports.getTrend = async () => {
@@ -249,71 +280,5 @@ exports.getTrend = async () => {
     throw new Error(
       `Error al obtener publicaciones más populares: ${error.message}`
     );
-  }
-};
-
-// Función para agregar un "like" a un comentario en una publicación
-exports.likeComment = async (pubId, usuario, fechaComentario) => {
-  try {
-    const pubRef = pubCollection.doc(pubId);
-    const pubSnapshot = await pubRef.get();
-
-    if (!pubSnapshot.exists) {
-      throw new Error("Publicación no encontrada");
-    }
-
-    let pubData = pubSnapshot.data();
-    let comentarios = pubData.comentarios || [];
-
-    // Buscar el comentario específico por usuario y fecha de comentario
-    let updatedComments = comentarios.map((comment) => {
-      if (
-        comment.usuario === usuario &&
-        comment.fechaComentario === fechaComentario
-      ) {
-        return { ...comment, likes: (comment.likes || 0) + 1 }; // Incrementar likes
-      }
-      return comment;
-    });
-
-    // Guardar los comentarios actualizados en Firebase
-    await pubRef.update({ comentarios: updatedComments });
-
-    return { id: pubId, comentarios: updatedComments };
-  } catch (error) {
-    throw new Error(`Error al dar like al comentario: ${error.message}`);
-  }
-};
-
-// Función para quitar un "like" de un comentario en una publicación
-exports.unlikeComment = async (pubId, usuario, fechaComentario) => {
-  try {
-    const pubRef = pubCollection.doc(pubId);
-    const pubSnapshot = await pubRef.get();
-
-    if (!pubSnapshot.exists) {
-      throw new Error("Publicación no encontrada");
-    }
-
-    let pubData = pubSnapshot.data();
-    let comentarios = pubData.comentarios || [];
-
-    // Buscar el comentario específico por usuario y fecha de comentario
-    let updatedComments = comentarios.map((comment) => {
-      if (
-        comment.usuario === usuario &&
-        comment.fechaComentario === fechaComentario
-      ) {
-        return { ...comment, likes: Math.max((comment.likes || 0) - 1, 0) }; // Evitar valores negativos
-      }
-      return comment;
-    });
-
-    // Guardar los comentarios actualizados en Firebase
-    await pubRef.update({ comentarios: updatedComments });
-
-    return { id: pubId, comentarios: updatedComments };
-  } catch (error) {
-    throw new Error(`Error al quitar like al comentario: ${error.message}`);
   }
 };

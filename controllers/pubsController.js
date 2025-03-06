@@ -42,11 +42,17 @@ exports.createPublication = async (req, res) => {
 exports.deletePublication = async (req, res) => {
   try {
     const delpub = await pubServices.deletePublication(req.params.id);
-    res.status(200).json({ message: "Publicación eliminada con éxito" });
+
+    if (delpub.success) {
+      return res.status(200).json({ message: "Publicación borrada con éxito", data: delpub });
+    } else {
+      return res.status(404).json({ message: "Publicación no encontrada", data: delpub });
+    }
   } catch (error) {
-    res.status(500).json({ message: "Error al eliminar publicación", error });
+    return res.status(500).json({ message: "Error al eliminar publicación", error: error.message });
   }
 };
+
 
 // Actualizar una publicación existente
 exports.updatePublication = async (req, res) => {
@@ -60,6 +66,21 @@ exports.updatePublication = async (req, res) => {
     res.status(500).json({ message: "Error al actualizar publicación", error });
   }
 };
+
+//Obtener los comentario de una publicacion
+exports.getComments = async (req, res) => {
+  try {
+    const pubId = req.params.idPub;
+
+    const comments = await pubServices.getCommentsByPublication(pubId);
+
+    res.status(200).json({ comentarios: comments });
+  } catch (error) {
+    res.status(500).json({ message: "Error al obtener los comentarios", error });
+  }
+};
+
+
 
 // Agregar un comentario a una publicación
 exports.addCommentToPublication = async (req, res) => {
@@ -110,19 +131,38 @@ exports.updateComment = async (req, res) => {
       res.status(201).json(comment);
     }
   } catch (error) {
-    res.status(500).json({ message: "Error al borrar el comentario" });
+    res.status(500).json({ message: "Error al actualizar el comentario" });
   }
 };
 
-exports.getMostTrend = async (res) => {
-  try{
-    const trend = await pubServices.getTrend();
-  if(trend){
-    res.status(201).json(trend);
-  }else{
-    res.status(404).json({message: "No hay publicaciones populares"});
+exports.updateLikeComment = async (req, res) => {
+  try {
+    const pubId = req.params.idPub;
+    const idComment = Number(req.params.idComment);
+    const increment = req.body.increment;
+
+    if (typeof increment !== "boolean") {
+      return res.status(400).json({ message: "El parámetro 'increment' debe ser booleano (true o false)." });
+    }
+
+    const likeComment = await pubServices.updateCommentLikes(pubId, idComment, increment);
+
+    return res.status(200).json(likeComment);
+  } catch (error) {
+    return res.status(500).json({ message: "No se pudo cambiar el like.", error: error.message });
   }
-  }catch(error){
-    res.status(500).json({message: "Error al obtener las publicaciones populares"});
+};
+
+
+exports.getMostTrend = async (res) => {
+  try {
+    const trend = await pubServices.getTrend();
+    if (trend) {
+      res.status(201).json(trend);
+    } else {
+      res.status(404).json({ message: "No hay publicaciones populares" });
+    }
+  } catch (error) {
+    res.status(500).json({ message: "Error al obtener las publicaciones populares" });
   }
 }

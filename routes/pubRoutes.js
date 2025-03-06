@@ -53,6 +53,10 @@ router.delete("/publication/:id", controllerPubs.deletePublication); // Eliminar
  */
 router.put("/publication/:id", controllerPubs.updatePublication);
 
+//Consultar los comentarios de una publicacion
+router.get('/publication/:idPub/comments', controllerPubs.getComments);
+
+
 //Agregar un comentario a una publicacion
 router.post(
   "/publication/:idPub/comment",
@@ -66,12 +70,13 @@ router.delete(
 );
 
 //Actualizar comentario de una publicacion
-router.put(
-  "/publication/:idPub/comment/:idComment",
-  controllerPubs.updateComment
-);
+router.put("/publication/:idPub/comment/:idComment", controllerPubs.updateComment);
+
+//Actualizar los likes de un comentario (agregar o quitar likes)
+router.put('/publication/:idPub/comment/:idComment/like', controllerPubs.updateLikeComment);
 
 //Obtener las publicaciones mas populares
 router.get('/publication/trends/', controllerPubs.getMostTrend);
+
 
 module.exports = router; // Exporta el router
