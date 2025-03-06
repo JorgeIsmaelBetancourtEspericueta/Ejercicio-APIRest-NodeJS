@@ -10,7 +10,7 @@ exports.getAllPublications = async (req, res) => {
       res.status(404).json({ message: "No hay publicaciones encontradas" });
     }
   } catch (error) {
-    res.status(500).json({ message: "Error al obtener publicaciones", error });
+    res.status(500).json({ message: "Error al obtener publicaciones" });
   }
 };
 
@@ -24,7 +24,7 @@ exports.getPublicationById = async (req, res) => {
       res.status(404).json({ message: "Publicacion no encontrada" });
     }
   } catch (error) {
-    res.status(500).json({ message: "Error al obtener la publicación", error });
+    res.status(500).json({ message: "Error al obtener la publicación" });
   }
 };
 
@@ -43,7 +43,7 @@ exports.createPublication = async (req, res) => {
       res.status(400).json({ message: "No se pudo crear la publicación" }); // 400 si hay un error en la solicitud
     }
   } catch (error) {
-    res.status(500).json({ message: "Error al crear la publicación", error });
+    res.status(500).json({ message: "Error al crear la publicación" });
   }
 };
 
@@ -53,18 +53,12 @@ exports.deletePublication = async (req, res) => {
     const delpub = await pubServices.deletePublication(req.params.id);
 
     if (delpub.success) {
-      return res
-        .status(200)
-        .json({ message: "Publicación borrada con éxito", data: delpub });
+      return res.status(200).json({ message: "Publicación borrada con éxito" });
     } else {
-      return res
-        .status(404)
-        .json({ message: "Publicación no encontrada", data: delpub });
+      return res.status(404).json({ message: "Publicación no encontrada" });
     }
   } catch (error) {
-    return res
-      .status(500)
-      .json({ message: "Error al eliminar publicación", error: error.message });
+    return res.status(500).json({ message: "Error al eliminar publicación" });
   }
 };
 
@@ -91,11 +85,10 @@ exports.updatePublication = async (req, res) => {
 
     return res
       .status(200)
-      .json({ message: "Publicación actualizada con éxito", data: updatedPub });
+      .json({ message: "Publicación actualizada con éxito" });
   } catch (error) {
     return res.status(500).json({
       message: "Error al actualizar publicación",
-      error: error.message,
     });
   }
 };
