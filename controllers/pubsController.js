@@ -47,21 +47,6 @@ exports.createPublication = async (req, res) => {
   }
 };
 
-// Eliminar una publicación
-exports.deletePublication = async (req, res) => {
-  try {
-    const delpub = await pubServices.deletePublication(req.params.id);
-
-    if (delpub.success) {
-      return res.status(200).json({ message: "Publicación borrada con éxito" });
-    } else {
-      return res.status(404).json({ message: "Publicación no encontrada" });
-    }
-  } catch (error) {
-    return res.status(500).json({ message: "Error al eliminar publicación" });
-  }
-};
-
 // Actualizar una publicación existente
 exports.updatePublication = async (req, res) => {
   try {
@@ -90,6 +75,21 @@ exports.updatePublication = async (req, res) => {
     return res.status(500).json({
       message: "Error al actualizar publicación",
     });
+  }
+};
+
+// Eliminar una publicación
+exports.deletePublication = async (req, res) => {
+  try {
+    const delpub = await pubServices.deletePublication(req.params.id);
+
+    if (delpub.success) {
+      return res.status(200).json({ message: "Publicación borrada con éxito" });
+    } else {
+      return res.status(404).json({ message: "Publicación no encontrada" });
+    }
+  } catch (error) {
+    return res.status(500).json({ message: "Error al eliminar publicación" });
   }
 };
 
