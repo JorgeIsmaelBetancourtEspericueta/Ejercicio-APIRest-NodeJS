@@ -71,13 +71,32 @@ exports.deletePublication = async (req, res) => {
 // Actualizar una publicación existente
 exports.updatePublication = async (req, res) => {
   try {
-    const pub = await pubServices.updatePublication(req.params.id, {
-      title: req.body.title,
-      content: req.body.content,
+    const { title, content } = req.body;
+
+    // Validar que se envíen los datos requeridos
+    if (!title || !content) {
+      return res
+        .status(400)
+        .json({ message: "Título y contenido son requeridos" });
+    }
+
+    const updatedPub = await pubServices.updatePublication(req.params.id, {
+      title,
+      content,
     });
-    res.status(200).json(pub); // Cambié el código de estado a 200 (OK)
+
+    if (!updatedPub) {
+      return res.status(404).json({ message: "Publicación no encontrada" });
+    }
+
+    return res
+      .status(200)
+      .json({ message: "Publicación actualizada con éxito", data: updatedPub });
   } catch (error) {
-    res.status(500).json({ message: "Error al actualizar publicación", error });
+    return res.status(500).json({
+      message: "Error al actualizar publicación",
+      error: error.message,
+    });
   }
 };
 
@@ -156,11 +175,9 @@ exports.updateLikeComment = async (req, res) => {
     const increment = req.body.increment;
 
     if (typeof increment !== "boolean") {
-      return res
-        .status(400)
-        .json({
-          message: "El parámetro 'increment' debe ser booleano (true o false).",
-        });
+      return res.status(400).json({
+        message: "El parámetro 'increment' debe ser booleano (true o false).",
+      });
     }
 
     const likeComment = await pubServices.updateCommentLikes(
