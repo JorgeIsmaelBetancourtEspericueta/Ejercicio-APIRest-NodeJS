@@ -67,10 +67,12 @@ exports.deletePublication = async (id) => {
     await pubRef.delete();
     return { success: true, message: "Publicación eliminada correctamente" };
   } catch (error) {
-    return { success: false, message: `Error al eliminar la publicación: ${error.message}` };
+    return {
+      success: false,
+      message: `Error al eliminar la publicación: ${error.message}`,
+    };
   }
 };
-
 
 // Actualizar una publicación por ID (solo título y contenido, manteniendo comentarios)
 exports.updatePublication = async (id, { title, content }) => {
@@ -139,9 +141,10 @@ exports.addCommentToPublication = async (pubId, comment) => {
     const comentarios = pubData.comentarios || []; // Obtener comentarios existentes o inicializar vacío
 
     // Determinar el ID autoincrementable
-    const newCommentId = comentarios.length > 0
-      ? Math.max(...comentarios.map(c => c.id)) + 1
-      : 1;
+    const newCommentId =
+      comentarios.length > 0
+        ? Math.max(...comentarios.map((c) => c.id)) + 1
+        : 1;
 
     // Crear nuevo comentario con la estructura requerida
     const newComment = {
@@ -165,9 +168,8 @@ exports.addCommentToPublication = async (pubId, comment) => {
   }
 };
 
-
 // Eliminar un comentario de una publicación
-exports.deleteCommentFromPublication = async (pubId, commentId) => {
+exports.deleteCommentFromPublication = async (pubId, commentIndex) => {
   try {
     const pubRef = pubCollection.doc(pubId);
     const pubSnapshot = await pubRef.get();
@@ -177,23 +179,22 @@ exports.deleteCommentFromPublication = async (pubId, commentId) => {
     }
 
     let pubData = pubSnapshot.data();
+    const index = parseInt(commentIndex, 10);
     let comentarios = pubData.comentarios || [];
 
     // Filtrar comentarios, eliminando el que coincida con el commentId
-    const newComments = comentarios.filter(comment => comment.id !== commentId);
+    const newComments = comentarios.filter((comment) => comment.id !== index);
 
     if (newComments.length === comentarios.length) {
       throw new Error("Comentario no encontrado");
     }
 
     await pubRef.update({ comentarios: newComments });
-
     return { id: pubId, comentarios: newComments };
   } catch (error) {
     throw new Error(`Error al eliminar comentario: ${error.message}`);
   }
 };
-
 
 // Actualizar un comentario en una publicación
 exports.updateCommentInPublication = async (pubId, commentId, newContent) => {
@@ -209,8 +210,10 @@ exports.updateCommentInPublication = async (pubId, commentId, newContent) => {
     let comentarios = pubData.comentarios || [];
 
     // Buscar el índice del comentario a actualizar
-    const commentIndex = comentarios.findIndex(comment => comment.id === commentId);
-    
+    const commentIndex = comentarios.findIndex(
+      (comment) => comment.id === commentId
+    );
+
     if (commentIndex === -1) {
       throw new Error("Comentario no encontrado");
     }
@@ -230,7 +233,6 @@ exports.updateCommentInPublication = async (pubId, commentId, newContent) => {
   }
 };
 
-
 // Actualizar los likes de un comentario en una publicación
 //Funciona para agregar o quitar comentarios
 exports.updateCommentLikes = async (pubId, commentId, increment) => {
@@ -246,27 +248,30 @@ exports.updateCommentLikes = async (pubId, commentId, increment) => {
     let comentarios = pubData.comentarios || [];
 
     // Intentar convertir el ID en string para evitar problemas de comparación
-    const commentIndex = comentarios.findIndex(c => (c.id) === (commentId));
+    const commentIndex = comentarios.findIndex((c) => c.id === commentId);
 
     if (commentIndex === -1) {
       throw new Error("Comentario no encontrado");
     }
 
     // Asegurar que los likes no sean undefined
-    comentarios[commentIndex].likes = (comentarios[commentIndex].likes || 0) + (increment ? 1 : -1);
-    comentarios[commentIndex].likes = Math.max(0, comentarios[commentIndex].likes);  // Evitar negativos
+    comentarios[commentIndex].likes =
+      (comentarios[commentIndex].likes || 0) + (increment ? 1 : -1);
+    comentarios[commentIndex].likes = Math.max(
+      0,
+      comentarios[commentIndex].likes
+    ); // Evitar negativos
 
     // Guardar cambios en la base de datos
     await pubRef.update({ comentarios });
 
     return { id: pubId, comentarios };
   } catch (error) {
-    throw new Error(`Error al actualizar likes del comentario: ${error.message}`);
+    throw new Error(
+      `Error al actualizar likes del comentario: ${error.message}`
+    );
   }
 };
-
-
-
 
 // Obtener las 5 publicaciones más populares
 exports.getTrend = async () => {
