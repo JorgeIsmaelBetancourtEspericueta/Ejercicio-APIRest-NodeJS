@@ -72,7 +72,7 @@ router.delete(
 //Actualizar comentario de una publicacion
 router.put("/publication/:idPub/comment/:idComment", controllerPubs.updateComment);
 
-//Actualizar los likes de un comentario (agregar o quitar likes)
+// Actualizar los likes de un comentario (agregar o quitar likes)
 router.patch('/publication/:idPub/comment/:idComment/like', controllerPubs.updateLikeComment);
 
 //Obtener las publicaciones mas populares

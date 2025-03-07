@@ -170,31 +170,23 @@ exports.updateComment = async (req, res) => {
   }
 };
 
+// Actualizar los likes de un comentario
 exports.updateLikeComment = async (req, res) => {
   try {
-    const pubId = req.params.idPub;
-    const idComment = Number(req.params.idComment);
     const increment = req.body.increment;
-
-    if (typeof increment !== "boolean") {
-      return res.status(400).json({
-        message: "El parámetro 'increment' debe ser booleano (true o false).",
-      });
-    }
-
+    if (typeof increment !== "boolean") 
+      return res.status(400).json({ message: "El parámetro 'increment' debe ser booleano" });
     const likeComment = await pubServices.updateCommentLikes(
-      pubId,
-      idComment,
+      req.params.idPub,
+      Number(req.params.idComment),
       increment
     );
-
-    return res.status(200).json(likeComment);
+    res.status(200).json(likeComment);
   } catch (error) {
-    return res
-      .status(500)
-      .json({ message: "No se pudo cambiar el like.", error: error.message });
+    res.status(500).json({ message: "No se pudo actualizar el like", error: error.message });
   }
 };
+
 
 exports.getMostTrend = async (res) => {
   try {
