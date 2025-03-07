@@ -14,18 +14,15 @@ exports.getPublications = async () => {
 // Obtener una publicación específica por ID
 exports.getPublicationById = async (id) => {
   try {
-    console.log("Buscando publicación con ID:", id);
     const pubRef = pubCollection.doc(id);
     const pubSnapshot = await pubRef.get();
 
     if (!pubSnapshot.exists) {
-      console.error("No se encontró la publicación en la base de datos.");
-      throw new Error("Publicación no encontrada");
+      return null; // No lanzar error, solo devolver null
     }
     return { id: pubSnapshot.id, ...pubSnapshot.data() };
   } catch (error) {
-    console.error("Error en getPublicationById:", error);
-    throw new Error(`Error al obtener la publicación: ${error.message}`);
+    throw new Error(`Error al obtener la publicación`);
   }
 };
 
@@ -81,17 +78,18 @@ exports.updatePublication = async (id, { title, content }) => {
     const pubSnapshot = await pubRef.get();
 
     if (!pubSnapshot.exists) {
-      throw new Error(`Publicación con ID ${id} no encontrada.`);
+      return {
+        error: true,
+        statusCode: 404,
+        message: `Publicación con ID ${id} no encontrada.`,
+      };
     }
 
     // Obtener los valores actuales de la publicación
     const pubData = pubSnapshot.data();
 
     // Actualizar solo el título y el contenido
-    await pubRef.update({
-      title: title,
-      content: content,
-    });
+    await pubRef.update({ title, content });
 
     return {
       id,
@@ -104,7 +102,11 @@ exports.updatePublication = async (id, { title, content }) => {
     };
   } catch (error) {
     console.error(`Error en updatePublication: ${error.message}`);
-    throw new Error(`Error al actualizar la publicación: ${error.message}`);
+    return {
+      error: true,
+      statusCode: 500,
+      message: `Error al actualizar la publicación: ${error.message}`,
+    };
   }
 };
 
