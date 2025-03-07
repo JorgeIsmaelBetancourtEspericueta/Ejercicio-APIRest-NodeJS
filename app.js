@@ -3,6 +3,7 @@ const app = express();
 const pubRoutes = require("./routes/pubRoutes"); // 👈 Verifica que esta línea importe bien el archivo
 
 app.use(express.json());
+app.use(express.json({ strict: false }));
 app.use("/api", pubRoutes); // 👈 Aquí usa "pubRoutes", no un objeto
 
 const PORT = process.env.PORT || 3001;

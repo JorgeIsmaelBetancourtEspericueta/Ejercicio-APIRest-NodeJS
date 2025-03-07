@@ -18,36 +18,61 @@ exports.getAllPublications = async (req, res) => {
 exports.getPublicationById = async (req, res) => {
   try {
     const pub = await pubServices.getPublicationById(req.params.id);
-    if (pub) {
-      res.status(200).json(pub);
-    } else {
-      res.status(404).json({ message: "Publicacion no encontrada" });
+    if (!pub) {
+      return res.status(404).json({ message: "Publicación no encontrada" });
     }
+    res.status(200).json(pub);
   } catch (error) {
+    console.error("Error en el controlador:", error);
     res.status(500).json({ message: "Error al obtener la publicación" });
   }
 };
 
-// Crear una nueva publicación
 exports.createPublication = async (req, res) => {
   try {
-    const newPub = await pubServices.addPublication(
-      req.body.author,
-      req.body.title,
-      req.body.content
-    );
-
-    if (newPub) {
-      res.status(201).json(newPub); // 201 indica que el recurso fue creado correctamente
-    } else {
-      res.status(400).json({ message: "No se pudo crear la publicación" }); // 400 si hay un error en la solicitud
+    // Validar que req.body tenga los datos correctos
+    if (!req.body || typeof req.body !== "object") {
+      return res.status(400).json({
+        message: "Formato de JSON inválido. Verifique los datos enviados.",
+      });
     }
+
+    const { author, title, content } = req.body;
+
+    // Validar que los campos no estén vacíos
+    if (!author || !title || !content) {
+      return res.status(400).json({
+        message: "Debe proporcionar author, title y content correctamente.",
+      });
+    }
+
+    // Validar tipos de datos
+    if (
+      typeof author !== "string" ||
+      typeof title !== "string" ||
+      typeof content !== "string"
+    ) {
+      return res
+        .status(400)
+        .json({ message: "Los campos deben ser de tipo string." });
+    }
+
+    // Llamar al servicio para agregar la publicación
+    const newPub = await pubServices.addPublication(author, title, content);
+    res.status(201).json(newPub); // 201: Creado exitosamente
   } catch (error) {
+    // Detectar errores de formato JSON
+    if (error instanceof SyntaxError) {
+      return res.status(400).json({
+        message: "Error en el formato del JSON. Verifique los datos enviados.",
+      });
+    }
+
     res.status(500).json({ message: "Error al crear la publicación" });
   }
 };
 
-// Actualizar una publicación existente
+// Controlador para actualizar una publicación existente
 exports.updatePublication = async (req, res) => {
   try {
     const { title, content } = req.body;
@@ -64,17 +89,20 @@ exports.updatePublication = async (req, res) => {
       content,
     });
 
-    if (!updatedPub) {
-      return res.status(404).json({ message: "Publicación no encontrada" });
+    // Manejo de errores específicos del servicio
+    if (updatedPub.error) {
+      return res
+        .status(updatedPub.statusCode)
+        .json({ message: updatedPub.message });
     }
 
     return res
       .status(200)
       .json({ message: "Publicación actualizada con éxito" });
   } catch (error) {
-    return res.status(500).json({
-      message: "Error al actualizar publicación",
-    });
+    return res
+      .status(500)
+      .json({ message: "Error inesperado al actualizar publicación" });
   }
 };
 
@@ -127,27 +155,30 @@ exports.addCommentToPublication = async (req, res) => {
   }
 };
 
-// Eliminar un comentario a una publicación
+// Controlador para eliminar un comentario
 exports.deleteComment = async (req, res) => {
   try {
     console.log("ID de la publicación:", req.params.idPub);
     console.log("ID del comentario:", req.params.idComment);
 
-    const comment = await pubServices.deleteCommentFromPublication(
+    const response = await pubServices.deleteCommentFromPublication(
       req.params.idPub,
       req.params.idComment
     );
 
-    if (comment) {
-      return res.status(200).json(comment);
-    } else {
-      return res.status(404).json({ message: "Comentario no encontrado" });
+    // Manejo de errores específicos del servicio
+    if (response.error) {
+      return res
+        .status(response.statusCode)
+        .json({ message: response.message });
     }
+
+    return res.status(200).json(response);
   } catch (error) {
     console.error("Error al borrar comentario:", error);
     return res
       .status(500)
-      .json({ message: "Error al borrar comentario", error: error.message });
+      .json({ message: "Error inesperado al borrar comentario" });
   }
 };
 
@@ -187,18 +218,26 @@ exports.updateLikeComment = async (req, res) => {
   }
 };
 
+<<<<<<< HEAD
 
 exports.getMostTrend = async (res) => {
+=======
+// Obtener las 5 publicaciones más populares
+exports.getMostTrend = async (req, res) => {
+>>>>>>> f422fc6d45bb4eef32b5733731668ccc9daacabd
   try {
     const trend = await pubServices.getTrend();
-    if (trend) {
-      res.status(201).json(trend);
+
+    if (trend && trend.length > 0) {
+      // Verifica que haya publicaciones
+      res.status(200).json(trend); // Devuelve el array de publicaciones
     } else {
       res.status(404).json({ message: "No hay publicaciones populares" });
     }
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error al obtener las publicaciones populares" });
+    res.status(500).json({
+      message: "Error al obtener las publicaciones populares",
+      error: error.message,
+    });
   }
 };
