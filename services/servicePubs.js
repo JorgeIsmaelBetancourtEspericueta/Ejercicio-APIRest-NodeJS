@@ -270,7 +270,7 @@ exports.updateCommentInPublication = async (pubId, commentId, newContent) => {
       comentarios, // Opcional: devolver lista completa actualizada
     };
   } catch (error) {
-    throw new Error(`Error al actualizar comentario: ${error.message}`);
+    throw new Error(`Error al actualizar comentario`);
   }
 };
 
