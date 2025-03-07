@@ -171,27 +171,40 @@ exports.addCommentToPublication = async (pubId, comment) => {
 // Eliminar un comentario de una publicación
 exports.deleteCommentFromPublication = async (pubId, commentIndex) => {
   try {
+    console.log("Buscando publicación con ID:", pubId);
+
     const pubRef = pubCollection.doc(pubId);
     const pubSnapshot = await pubRef.get();
 
     if (!pubSnapshot.exists) {
+      console.log("Publicación no encontrada");
       throw new Error("Publicación no encontrada");
     }
 
     let pubData = pubSnapshot.data();
-    const index = parseInt(commentIndex, 10);
-    let comentarios = pubData.comentarios || [];
+    console.log("Publicación encontrada:", pubData);
 
-    // Filtrar comentarios, eliminando el que coincida con el commentId
-    const newComments = comentarios.filter((comment) => comment.id !== index);
+    let comentarios = pubData.comentarios || [];
+    console.log("Comentarios actuales:", comentarios);
+
+    const index = parseInt(commentIndex, 10);
+    console.log("Buscando comentario con ID:", index);
+
+    const newComments = comentarios.filter(
+      (comment) => parseInt(comment.id, 10) !== index
+    );
 
     if (newComments.length === comentarios.length) {
+      console.log("Comentario no encontrado en la lista");
       throw new Error("Comentario no encontrado");
     }
 
     await pubRef.update({ comentarios: newComments });
+    console.log("Comentario eliminado correctamente");
+
     return { id: pubId, comentarios: newComments };
   } catch (error) {
+    console.error("Error en deleteCommentFromPublication:", error);
     throw new Error(`Error al eliminar comentario: ${error.message}`);
   }
 };

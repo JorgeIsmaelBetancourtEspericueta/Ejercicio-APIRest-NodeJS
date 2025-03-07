@@ -130,15 +130,24 @@ exports.addCommentToPublication = async (req, res) => {
 // Eliminar un comentario a una publicación
 exports.deleteComment = async (req, res) => {
   try {
+    console.log("ID de la publicación:", req.params.idPub);
+    console.log("ID del comentario:", req.params.idComment);
+
     const comment = await pubServices.deleteCommentFromPublication(
       req.params.idPub,
       req.params.idComment
     );
+
     if (comment) {
-      res.status(201).json(comment);
+      return res.status(200).json(comment);
+    } else {
+      return res.status(404).json({ message: "Comentario no encontrado" });
     }
   } catch (error) {
-    res.status(500).json({ message: "Error al borrar comentario", error });
+    console.error("Error al borrar comentario:", error);
+    return res
+      .status(500)
+      .json({ message: "Error al borrar comentario", error: error.message });
   }
 };
 
