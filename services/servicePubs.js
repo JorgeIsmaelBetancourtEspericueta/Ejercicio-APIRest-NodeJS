@@ -179,35 +179,40 @@ exports.deleteCommentFromPublication = async (pubId, commentIndex) => {
     const pubSnapshot = await pubRef.get();
 
     if (!pubSnapshot.exists) {
-      console.log("Publicación no encontrada");
-      throw new Error("Publicación no encontrada");
+      return {
+        error: true,
+        statusCode: 404,
+        message: "Publicación no encontrada",
+      };
     }
 
     let pubData = pubSnapshot.data();
-    console.log("Publicación encontrada:", pubData);
-
     let comentarios = pubData.comentarios || [];
-    console.log("Comentarios actuales:", comentarios);
 
     const index = parseInt(commentIndex, 10);
-    console.log("Buscando comentario con ID:", index);
 
     const newComments = comentarios.filter(
       (comment) => parseInt(comment.id, 10) !== index
     );
 
     if (newComments.length === comentarios.length) {
-      console.log("Comentario no encontrado en la lista");
-      throw new Error("Comentario no encontrado");
+      return {
+        error: true,
+        statusCode: 404,
+        message: "Comentario no encontrado",
+      };
     }
 
     await pubRef.update({ comentarios: newComments });
-    console.log("Comentario eliminado correctamente");
 
     return { id: pubId, comentarios: newComments };
   } catch (error) {
-    console.error("Error en deleteCommentFromPublication:", error);
-    throw new Error(`Error al eliminar comentario: ${error.message}`);
+    console.error(`Error en deleteCommentFromPublication: ${error.message}`);
+    return {
+      error: true,
+      statusCode: 500,
+      message: `Error al eliminar comentario: ${error.message}`,
+    };
   }
 };
 
@@ -289,16 +294,28 @@ exports.updateCommentLikes = async (pubId, commentId, increment) => {
 };
 
 // Obtener las 5 publicaciones más populares
+// Obtener las 5 publicaciones más populares
 exports.getTrend = async () => {
   try {
     const snapshot = await pubCollection
       .orderBy("popularidad", "desc")
       .limit(5)
       .get();
-    return snapshot;
+
+    // Verifica si hay publicaciones
+    if (snapshot.empty) {
+      throw new Error("No se encontraron publicaciones populares");
+    }
+
+    // Transforma el snapshot en un array de publicaciones
+    const publicaciones = snapshot.docs.map((doc) => {
+      return { id: doc.id, ...doc.data() }; // Agrega el id de la publicación al objeto
+    });
+
+    return publicaciones; // Devuelve el array de publicaciones
   } catch (error) {
     throw new Error(
-      `Error al obtener publicaciones más populares: ${error.message}`
+      error.message || "Error al obtener publicaciones más populares"
     );
   }
 };

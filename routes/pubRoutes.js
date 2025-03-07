@@ -76,7 +76,7 @@ router.put("/publication/:idPub/comment/:idComment", controllerPubs.updateCommen
 router.patch('/publication/:idPub/comment/:idComment/like', controllerPubs.updateLikeComment);
 
 //Obtener las publicaciones mas populares
-router.get('/publication/trends/', controllerPubs.getMostTrend);
+router.get('/publication/trends/popular', controllerPubs.getMostTrend);
 
 
 module.exports = router; // Exporta el router

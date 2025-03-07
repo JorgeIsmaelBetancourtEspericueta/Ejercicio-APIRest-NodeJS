@@ -155,27 +155,30 @@ exports.addCommentToPublication = async (req, res) => {
   }
 };
 
-// Eliminar un comentario a una publicación
+// Controlador para eliminar un comentario
 exports.deleteComment = async (req, res) => {
   try {
     console.log("ID de la publicación:", req.params.idPub);
     console.log("ID del comentario:", req.params.idComment);
 
-    const comment = await pubServices.deleteCommentFromPublication(
+    const response = await pubServices.deleteCommentFromPublication(
       req.params.idPub,
       req.params.idComment
     );
 
-    if (comment) {
-      return res.status(200).json(comment);
-    } else {
-      return res.status(404).json({ message: "Comentario no encontrado" });
+    // Manejo de errores específicos del servicio
+    if (response.error) {
+      return res
+        .status(response.statusCode)
+        .json({ message: response.message });
     }
+
+    return res.status(200).json(response);
   } catch (error) {
     console.error("Error al borrar comentario:", error);
     return res
       .status(500)
-      .json({ message: "Error al borrar comentario", error: error.message });
+      .json({ message: "Error inesperado al borrar comentario" });
   }
 };
 
@@ -224,17 +227,21 @@ exports.updateLikeComment = async (req, res) => {
   }
 };
 
-exports.getMostTrend = async (res) => {
+// Obtener las 5 publicaciones más populares
+exports.getMostTrend = async (req, res) => {
   try {
     const trend = await pubServices.getTrend();
-    if (trend) {
-      res.status(201).json(trend);
+
+    if (trend && trend.length > 0) {
+      // Verifica que haya publicaciones
+      res.status(200).json(trend); // Devuelve el array de publicaciones
     } else {
       res.status(404).json({ message: "No hay publicaciones populares" });
     }
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error al obtener las publicaciones populares" });
+    res.status(500).json({
+      message: "Error al obtener las publicaciones populares",
+      error: error.message,
+    });
   }
 };
