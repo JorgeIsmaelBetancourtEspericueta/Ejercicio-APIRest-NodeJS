@@ -219,39 +219,55 @@ exports.deleteCommentFromPublication = async (pubId, commentIndex) => {
 // Actualizar un comentario en una publicación
 exports.updateCommentInPublication = async (pubId, commentId, newContent) => {
   try {
+    // Verificar que newContent sea un string
+    if (typeof newContent !== "string") {
+      throw new Error("El contenido del comentario debe ser un string");
+    }
+
     // Convertir commentId a número
     const parsedCommentId = parseInt(commentId, 10);
     if (isNaN(parsedCommentId)) {
       throw new Error("ID de comentario inválido");
     }
+
+    // Referencia a la publicación
     const pubRef = pubCollection.doc(pubId);
     const pubSnapshot = await pubRef.get();
+
     if (!pubSnapshot.exists) {
       throw new Error("Publicación no encontrada");
     }
+
     const pubData = pubSnapshot.data();
     const comentarios = pubData.comentarios || [];
+
     // Buscar el comentario por ID numérico
     const commentIndex = comentarios.findIndex(
       (comment) => comment.id === parsedCommentId
     );
+
     if (commentIndex === -1) {
       throw new Error("Comentario no encontrado");
     }
+
     // Crear copia actualizada del comentario
     const updatedComment = {
       ...comentarios[commentIndex],
-      contenido: newContent,
+      contenido: newContent, // Asegurarse de que newContent es solo un string
       fechaModificacion: new Date().toISOString(),
     };
-    // Actualizar el array de comentarios
+
+    // Actualizar el array de comentarios con el comentario modificado
     comentarios[commentIndex] = updatedComment;
+
     // Guardar cambios en Firestore
     await pubRef.update({ comentarios });
-    return { 
+
+    // Retornar la respuesta con los datos actualizados
+    return {
       id: pubId,
       comentarioActualizado: updatedComment,
-      comentarios // Opcional: devolver lista completa actualizada
+      comentarios, // Opcional: devolver lista completa actualizada
     };
   } catch (error) {
     throw new Error(`Error al actualizar comentario: ${error.message}`);
@@ -259,41 +275,46 @@ exports.updateCommentInPublication = async (pubId, commentId, newContent) => {
 };
 
 // Actualizar los likes de un comentario en una publicación
-exports.updateLikeComment = async (pubId, userId, fechaComentario, increment = true) => {
+exports.updateLikeComment = async (pubId, commentId, increment = true) => {
   try {
     const pubRef = pubCollection.doc(pubId);
     const pubSnapshot = await pubRef.get();
 
     if (!pubSnapshot.exists) {
-      throw new Error("Publicación no encontrada");
+      return { success: false, message: "Publicación no encontrada" };
     }
 
     let pubData = pubSnapshot.data();
     let comments = pubData.comentarios || [];
-    // Buscar el comentario por usuario y fechaComentario
+
+    console.log("Comentarios en la publicación:", comments);
+    console.log("Buscando comentario con ID:", commentId);
+
     const commentIndex = comments.findIndex(
-      (c) => c.usuario === userId && c.fechaComentario === fechaComentario
+      (c) => String(c.id) === String(commentId)
     );
+
     if (commentIndex === -1) {
-      throw new Error("Comentario no encontrado");
+      return { success: false, message: "Comentario no encontrado" };
     }
-    // Actualizar los likes (sin permitir valores negativos)
+
     comments[commentIndex].likes = Math.max(
       0,
       (comments[commentIndex].likes || 0) + (increment ? 1 : -1)
     );
-    // Guardar los cambios en la base de datos
+
     await pubRef.update({ comentarios: comments });
 
     return { success: true, comentarios: comments };
   } catch (error) {
     console.error("Error en updateLikeComment:", error);
-    throw new Error(`Error al actualizar likes del comentario: ${error.message}`);
+    return {
+      success: false,
+      message: `Error al actualizar likes: ${error.message}`,
+    };
   }
 };
 
-
-// Obtener las 5 publicaciones más populares
 // Obtener las 5 publicaciones más populares
 exports.getTrend = async () => {
   try {

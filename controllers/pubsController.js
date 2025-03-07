@@ -185,46 +185,81 @@ exports.deleteComment = async (req, res) => {
 //Editar un comentario de una publicacion
 exports.updateComment = async (req, res) => {
   try {
-    const idPub = req.params.idPub;
-    const idComment = req.params.idComment;
-    const newContent = req.body;
+    // Obtener los parámetros de la URL
+    const idPub = req.params.idPub; // ID de la publicación
+    const idComment = req.params.idComment; // ID del comentario
+
+    // Obtener el contenido nuevo del cuerpo de la solicitud (debe ser un string)
+    const newContent = req.body.contenido;
+
+    // Verificar que newContent no esté vacío
+    if (typeof newContent !== "string" || newContent.trim() === "") {
+      return res
+        .status(400)
+        .json({
+          message: "El contenido del comentario debe ser un texto no vacío.",
+        });
+    }
+
+    // Llamar al servicio que actualiza el comentario
     const comment = await pubServices.updateCommentInPublication(
       idPub,
       idComment,
       newContent
     );
+
+    // Si el comentario se actualiza correctamente, devolver la respuesta
     if (comment) {
-      res.status(201).json(comment);
+      res.status(200).json(comment); // Usamos 200 en lugar de 201 ya que es una actualización
+    } else {
+      res.status(404).json({ message: "Comentario no encontrado" });
     }
   } catch (error) {
-    res.status(500).json({ message: "Error al actualizar el comentario" });
+    console.error(error);
+
+    // Si el error proviene del servicio y tiene un mensaje claro, usar ese mensaje
+    if (
+      error.message.includes("Comentario no encontrado") ||
+      error.message.includes("Publicación no encontrada")
+    ) {
+      res.status(404).json({ message: error.message });
+    } else {
+      res.status(500).json({ message: "Error al actualizar el comentario" });
+    }
   }
 };
 
 // Actualizar los likes de un comentario
 exports.updateLikeComment = async (req, res) => {
   try {
-    const increment = req.body.increment;
-    if (typeof increment !== "boolean") 
-      return res.status(400).json({ message: "El parámetro 'increment' debe ser booleano" });
-    const likeComment = await pubServices.updateCommentLikes(
+    const { increment } = req.body;
+
+    if (typeof increment !== "boolean") {
+      return res
+        .status(400)
+        .json({ message: "El parámetro 'increment' debe ser booleano" });
+    }
+
+    const likeComment = await pubServices.updateLikeComment(
       req.params.idPub,
-      Number(req.params.idComment),
+      req.params.idComment,
       increment
     );
+
+    if (!likeComment.success) {
+      return res.status(404).json({ message: likeComment.message });
+    }
+
     res.status(200).json(likeComment);
   } catch (error) {
-    res.status(500).json({ message: "No se pudo actualizar el like", error: error.message });
+    res.status(500).json({
+      message: "No se pudo actualizar el like",
+    });
   }
 };
 
-<<<<<<< HEAD
-
-exports.getMostTrend = async (res) => {
-=======
 // Obtener las 5 publicaciones más populares
 exports.getMostTrend = async (req, res) => {
->>>>>>> f422fc6d45bb4eef32b5733731668ccc9daacabd
   try {
     const trend = await pubServices.getTrend();
 
