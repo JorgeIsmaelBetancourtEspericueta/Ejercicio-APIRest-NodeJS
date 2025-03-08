@@ -167,11 +167,13 @@ exports.addCommentToPublication = async (req, res) => {
 
     res.status(201).json(comment);
   } catch (error) {
-    console.error("Error interno al agregar comentario:", error);
+    console.error("Error al agregar comentario", error);
 
-    res
-      .status(400)
-      .json({ message: "Error interno al agregar comentario inapropiado" });
+    if (error.message === "Publicación no encontrada") {
+      return res.status(404).json({ message: error.message }); // Error claro para publicación no encontrada
+    }
+
+    res.status(500).json({ message: "Error al agregar comentario" }); // Error general para otros fallos
   }
 };
 

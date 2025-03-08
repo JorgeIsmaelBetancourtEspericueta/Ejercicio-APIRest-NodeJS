@@ -129,14 +129,14 @@ exports.getCommentsByPublication = async (pubId) => {
   }
 };
 
-// Agregar un comentario a una publicación  servicePubs
+// Agregar un comentario a una publicación
 exports.addCommentToPublication = async (pubId, comment) => {
   try {
     const pubRef = pubCollection.doc(pubId);
     const pubSnapshot = await pubRef.get();
 
     if (!pubSnapshot.exists) {
-      throw new Error("Publicación no encontrada");
+      throw new Error("Publicación no encontrada"); // Lanza un error claro
     }
 
     // Validar si el comentario contiene palabras prohibidas
@@ -172,8 +172,8 @@ exports.addCommentToPublication = async (pubId, comment) => {
 
     return newComment;
   } catch (error) {
-    console.error("Error al agregar comentario:", error);
-    throw error;
+    console.error("Error al agregar comentario", error);
+    throw error; // Propaga el error para que sea manejado en el controlador
   }
 };
 
