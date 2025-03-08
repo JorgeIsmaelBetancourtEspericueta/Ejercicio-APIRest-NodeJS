@@ -315,7 +315,7 @@ exports.updateCommentInPublication = async (pubId, commentId, newContent) => {
   }
 };
 
-// Actualizar los likes de un comentario en una publicación
+// Actualizar el like en un comentario
 exports.updateLikeComment = async (pubId, commentId, increment = true) => {
   try {
     const pubRef = pubCollection.doc(pubId);
@@ -327,6 +327,7 @@ exports.updateLikeComment = async (pubId, commentId, increment = true) => {
 
     let pubData = pubSnapshot.data();
     let comments = pubData.comentarios || [];
+    let popularidad = pubData.popularidad || 0; // Obtener popularidad actual
 
     console.log("Comentarios en la publicación:", comments);
     console.log("Buscando comentario con ID:", commentId);
@@ -339,19 +340,35 @@ exports.updateLikeComment = async (pubId, commentId, increment = true) => {
       return { success: false, message: "Comentario no encontrado" };
     }
 
-    comments[commentIndex].likes = Math.max(
-      0,
-      (comments[commentIndex].likes || 0) + (increment ? 1 : -1)
-    );
+    let currentLikes = comments[commentIndex].likes || 0;
 
-    await pubRef.update({ comentarios: comments });
+    // Solo reducir likes si hay al menos 1
+    if (!increment && currentLikes === 0) {
+      return {
+        success: false,
+        message: "No se pueden reducir likes por debajo de 0",
+      };
+    }
 
-    return { success: true, comentarios: comments };
+    // Actualizar los likes del comentario
+    comments[commentIndex].likes = currentLikes + (increment ? 1 : -1);
+
+    // Aumentar o disminuir la popularidad SOLO si se realizó un cambio en los likes
+    if (increment) {
+      popularidad += 1;
+    } else if (currentLikes > 0) {
+      popularidad = Math.max(0, popularidad - 1);
+    }
+
+    // Actualizar en la base de datos
+    await pubRef.update({ comentarios: comments, popularidad });
+
+    return { success: true, comentarios: comments, popularidad };
   } catch (error) {
-    console.error("Error en updateLikeComment:", error);
+    console.error("Error en updateLikeComment", error);
     return {
       success: false,
-      message: `Error al actualizar likes: ${error.message}`,
+      message: `Error al actualizar likes`,
     };
   }
 };
