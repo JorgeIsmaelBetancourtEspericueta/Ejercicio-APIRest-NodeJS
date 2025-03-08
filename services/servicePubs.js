@@ -129,7 +129,7 @@ exports.getCommentsByPublication = async (pubId) => {
   }
 };
 
-// Agregar un comentario a una publicación
+// Agregar un comentario a una publicación  servicePubs
 exports.addCommentToPublication = async (pubId, comment) => {
   try {
     const pubRef = pubCollection.doc(pubId);
@@ -139,8 +139,15 @@ exports.addCommentToPublication = async (pubId, comment) => {
       throw new Error("Publicación no encontrada");
     }
 
+    // Validar si el comentario contiene palabras prohibidas
+    if (validateComment(comment.contenido)) {
+      throw new Error("Comentario no permitido por lenguaje inapropiado.");
+    }
+
     const pubData = pubSnapshot.data();
-    const comentarios = pubData.comentarios || []; // Obtener comentarios existentes o inicializar vacío
+    const comentarios = Array.isArray(pubData.comentarios)
+      ? pubData.comentarios
+      : [];
 
     // Determinar el ID autoincrementable
     const newCommentId =
@@ -150,7 +157,7 @@ exports.addCommentToPublication = async (pubId, comment) => {
 
     // Crear nuevo comentario con la estructura requerida
     const newComment = {
-      id: newCommentId, // Asignar ID autoincrementable
+      id: newCommentId,
       usuario: comment.usuario,
       contenido: comment.contenido,
       fechaComentario: new Date().toISOString(),
@@ -170,6 +177,40 @@ exports.addCommentToPublication = async (pubId, comment) => {
   }
 };
 
+// Lista de palabras prohibidas
+const palabrasProhibidas = [
+  "idiota",
+  "imbécil",
+  "estúpido",
+  "tonto",
+  "mierda",
+  "maldito",
+  "cabron",
+  "pendejo",
+  "jodido",
+  "coño",
+  "chingado",
+  "puto",
+  "zorra",
+  "tarado",
+  "baboso",
+  "culero",
+  "marica",
+  "huevon",
+  "pelotudo",
+  "gilipollas",
+  "pajero",
+  "naco",
+  "puta",
+  "cabrón",
+];
+
+// Función para validar comentarios
+function validateComment(comment) {
+  return palabrasProhibidas.some((palabra) =>
+    comment.toLowerCase().includes(palabra)
+  );
+}
 // Eliminar un comentario de una publicación
 exports.deleteCommentFromPublication = async (pubId, commentIndex) => {
   try {

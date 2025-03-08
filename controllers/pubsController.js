@@ -139,19 +139,39 @@ exports.getComments = async (req, res) => {
 // Agregar un comentario a una publicación
 exports.addCommentToPublication = async (req, res) => {
   try {
-    const content = {
-      usuario: req.body.user,
-      contenido: req.body.content,
-    };
+    const { user, content } = req.body;
+
+    // Validación de entrada
+    if (!user || !content) {
+      return res
+        .status(400)
+        .json({ message: "Usuario y contenido requeridos" });
+    }
+
+    // Filtrar contenido inapropiado
+    const forbiddenWords = ["mala palabra", "ofensivo", "spam"];
+    if (forbiddenWords.some((word) => content.toLowerCase().includes(word))) {
+      return res.status(400).json({ message: "Comentario inapropiado" });
+    }
+
+    const commentData = { usuario: user, contenido: content };
+
     const comment = await pubServices.addCommentToPublication(
       req.params.idPub,
-      content
+      commentData
     );
-    if (comment) {
-      res.status(201).json(comment);
+
+    if (!comment) {
+      return res.status(404).json({ message: "Publicación no encontrada" });
     }
+
+    res.status(201).json(comment);
   } catch (error) {
-    res.status(500).json({ message: "Error al agregar comentario" });
+    console.error("Error interno al agregar comentario:", error);
+
+    res
+      .status(400)
+      .json({ message: "Error interno al agregar comentario inapropiado" });
   }
 };
 
@@ -194,11 +214,9 @@ exports.updateComment = async (req, res) => {
 
     // Verificar que newContent no esté vacío
     if (typeof newContent !== "string" || newContent.trim() === "") {
-      return res
-        .status(400)
-        .json({
-          message: "El contenido del comentario debe ser un texto no vacío.",
-        });
+      return res.status(400).json({
+        message: "El contenido del comentario debe ser un texto no vacío.",
+      });
     }
 
     // Llamar al servicio que actualiza el comentario
