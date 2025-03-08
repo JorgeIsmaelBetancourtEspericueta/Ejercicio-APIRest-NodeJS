@@ -170,7 +170,7 @@ exports.addCommentToPublication = async (req, res) => {
     console.error("Error al agregar comentario", error);
 
     if (error.message === "Publicación no encontrada") {
-      return res.status(404).json({ message: error.message }); // Error claro para publicación no encontrada
+      return res.status(404).json({ message: "Publicación no encontrada" }); // Error claro para publicación no encontrada
     }
 
     res.status(500).json({ message: "Error al agregar comentario" }); // Error general para otros fallos
