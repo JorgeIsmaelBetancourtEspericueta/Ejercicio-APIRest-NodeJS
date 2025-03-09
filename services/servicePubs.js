@@ -267,26 +267,23 @@ exports.deleteCommentFromPublication = async (pubId, commentIndex) => {
   }
 };
 
-//Actualizar un comentario
 exports.updateCommentInPublication = async (pubId, commentId, newContent) => {
   try {
-    // Validación de contenido
     if (typeof newContent !== "string" || newContent.trim() === "") {
-      throw new Error("El contenido del comentario debe ser un texto no vacío.");
+      throw new Error(
+        "El contenido del comentario debe ser un texto no vacío."
+      );
     }
 
-    // Validar si el contenido es inapropiado
     if (validateComment(newContent)) {
       throw new Error("Comentario no permitido por lenguaje inapropiado.");
     }
 
-    // Convertir commentId a número
     const parsedCommentId = parseInt(commentId, 10);
     if (isNaN(parsedCommentId)) {
       throw new Error("ID de comentario inválido");
     }
 
-    // Referencia a la publicación
     const pubRef = pubCollection.doc(pubId);
     const pubSnapshot = await pubRef.get();
 
@@ -297,7 +294,6 @@ exports.updateCommentInPublication = async (pubId, commentId, newContent) => {
     const pubData = pubSnapshot.data();
     const comentarios = pubData.comentarios || [];
 
-    // Buscar el comentario por ID
     const commentIndex = comentarios.findIndex(
       (comment) => comment.id === parsedCommentId
     );
@@ -306,30 +302,29 @@ exports.updateCommentInPublication = async (pubId, commentId, newContent) => {
       throw new Error("Comentario no encontrado");
     }
 
-    // Crear el comentario actualizado
     const updatedComment = {
       ...comentarios[commentIndex],
       contenido: newContent,
       fechaModificacion: new Date().toISOString(),
     };
 
-    // Actualizar los comentarios en Firestore
     comentarios[commentIndex] = updatedComment;
 
-    // Guardar cambios en la base de datos
     await pubRef.update({ comentarios });
 
-    // Devolver solo los datos relevantes (sin duplicar)
     return {
       comentarioActualizado: updatedComment,
-      comentarios, // Devolver la lista completa de comentarios
+      comentarios,
     };
   } catch (error) {
-    console.error("Error al actualizar comentario:", error.message);
-    throw new Error(error.message); // Propagar error con el mensaje real
+    console.error(
+      "Error al actualizar comentario:",
+      error.message,
+      error.stack
+    ); // Agrega el stacktrace para más detalles
+    throw error; // Propagar el error real
   }
 };
-
 
 // Actualizar el like en un comentario
 exports.updateLikeComment = async (pubId, commentId, increment = true) => {

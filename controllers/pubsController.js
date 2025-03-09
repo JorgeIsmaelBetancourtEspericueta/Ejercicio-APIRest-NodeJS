@@ -142,7 +142,9 @@ exports.addCommentToPublication = async (req, res) => {
     const { user, content } = req.body;
 
     if (!user || !content) {
-      return res.status(400).json({ message: "Usuario y contenido requeridos" });
+      return res
+        .status(400)
+        .json({ message: "Usuario y contenido requeridos" });
     }
 
     const commentData = { usuario: user, contenido: content };
@@ -175,43 +177,39 @@ exports.updateComment = async (req, res) => {
     const idComment = req.params.idComment;
     const newContent = req.body.contenido;
 
-    // Validación de contenido vacío
     if (typeof newContent !== "string" || newContent.trim() === "") {
       return res.status(400).json({
         message: "El contenido del comentario debe ser un texto no vacío.",
       });
     }
 
-    // Llamada al servicio para actualizar el comentario
     const result = await pubServices.updateCommentInPublication(
       idPub,
       idComment,
       newContent
     );
 
-    // Verifica si la actualización fue exitosa
-    if (result) {
-      res.status(200).json({
-        message: "Comentario actualizado exitosamente",
-        comentarioActualizado: result.comentarioActualizado, // Solo el comentario actualizado
-      });
-    } else {
-      res.status(404).json({ message: "Comentario no encontrado" });
-    }
+    res.status(200).json({
+      message: "Comentario actualizado exitosamente",
+      comentarioActualizado: result.comentarioActualizado,
+    });
   } catch (error) {
-    console.error("Error al actualizar comentario", error);
+    console.error("Error al actualizar comentario:", error.message); // Mostrar más detalles del error
+    if (error.message === "Comentario no encontrado") {
+      return res.status(404).json({ message: error.message });
+    }
 
-    // Manejo de errores específicos
     if (error.message === "Comentario no permitido por lenguaje inapropiado.") {
       return res.status(400).json({ message: error.message });
     }
 
-    // Errores generales
-    res.status(500).json({ message: "Error al actualizar el comentario" });
+    // Manejo genérico de otros errores
+    res.status(500).json({
+      message: "Error al actualizar el comentario",
+      error: error.message, // Mostrar el error para más detalles
+    });
   }
 };
-
-
 
 // Controlador para eliminar un comentario
 exports.deleteComment = async (req, res) => {
