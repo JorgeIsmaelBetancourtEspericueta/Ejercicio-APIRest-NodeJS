@@ -229,14 +229,15 @@ exports.deleteCommentFromPublication = async (pubId, commentIndex) => {
 
     let pubData = pubSnapshot.data();
     let comentarios = pubData.comentarios || [];
+    let popularidad = pubData.popularidad || 0; // Obtener popularidad actual
 
     const index = parseInt(commentIndex, 10);
 
-    const newComments = comentarios.filter(
-      (comment) => parseInt(comment.id, 10) !== index
+    const commentToDelete = comentarios.find(
+      (comment) => parseInt(comment.id, 10) === index
     );
 
-    if (newComments.length === comentarios.length) {
+    if (!commentToDelete) {
       return {
         error: true,
         statusCode: 404,
@@ -244,9 +245,18 @@ exports.deleteCommentFromPublication = async (pubId, commentIndex) => {
       };
     }
 
-    await pubRef.update({ comentarios: newComments });
+    // Restar los likes del comentario eliminado a la popularidad
+    popularidad -= commentToDelete.likes;
 
-    return { id: pubId, comentarios: newComments };
+    // Filtrar el comentario que se va a eliminar
+    const newComments = comentarios.filter(
+      (comment) => parseInt(comment.id, 10) !== index
+    );
+
+    // Actualizar la publicación con los comentarios y la nueva popularidad
+    await pubRef.update({ comentarios: newComments, popularidad });
+
+    return { id: pubId, comentarios: newComments, popularidad };
   } catch (error) {
     console.error(`Error en deleteCommentFromPublication: ${error.message}`);
     return {

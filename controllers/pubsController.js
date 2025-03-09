@@ -136,13 +136,6 @@ exports.getComments = async (req, res) => {
   }
 };
 
-// Función para validar contenido inapropiado
-const isInappropriateContent = (content) => {
-  const forbiddenWords = ["mala palabra", "ofensivo", "spam"];
-  return forbiddenWords.some((word) => content.toLowerCase().includes(word));
-};
-//Fin funcion para validar
-
 // Agregar un comentario a una publicación
 exports.addCommentToPublication = async (req, res) => {
   try {
