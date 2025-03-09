@@ -136,22 +136,20 @@ exports.getComments = async (req, res) => {
   }
 };
 
+// Función para validar contenido inapropiado
+const isInappropriateContent = (content) => {
+  const forbiddenWords = ["mala palabra", "ofensivo", "spam"];
+  return forbiddenWords.some((word) => content.toLowerCase().includes(word));
+};
+//Fin funcion para validar
+
 // Agregar un comentario a una publicación
 exports.addCommentToPublication = async (req, res) => {
   try {
     const { user, content } = req.body;
 
-    // Validación de entrada
     if (!user || !content) {
-      return res
-        .status(400)
-        .json({ message: "Usuario y contenido requeridos" });
-    }
-
-    // Filtrar contenido inapropiado
-    const forbiddenWords = ["mala palabra", "ofensivo", "spam"];
-    if (forbiddenWords.some((word) => content.toLowerCase().includes(word))) {
-      return res.status(400).json({ message: "Comentario inapropiado" });
+      return res.status(400).json({ message: "Usuario y contenido requeridos" });
     }
 
     const commentData = { usuario: user, contenido: content };
@@ -161,21 +159,60 @@ exports.addCommentToPublication = async (req, res) => {
       commentData
     );
 
-    if (!comment) {
-      return res.status(404).json({ message: "Publicación no encontrada" });
-    }
-
     res.status(201).json(comment);
   } catch (error) {
     console.error("Error al agregar comentario", error);
 
-    if (error.message === "Publicación no encontrada") {
-      return res.status(404).json({ message: "Publicación no encontrada" }); // Error claro para publicación no encontrada
+    if (error.message === "Comentario no permitido por lenguaje inapropiado.") {
+      return res.status(400).json({ message: error.message }); // Maneja el error del servicio
     }
 
-    res.status(500).json({ message: "Error al agregar comentario" }); // Error general para otros fallos
+    if (error.message === "Publicación no encontrada") {
+      return res.status(404).json({ message: error.message });
+    }
+
+    res.status(500).json({ message: "Error al agregar comentario" });
   }
 };
+
+// Editar un comentario de una publicación
+exports.updateComment = async (req, res) => {
+  try {
+    const idPub = req.params.idPub;
+    const idComment = req.params.idComment;
+    const newContent = req.body.contenido;
+
+    if (typeof newContent !== "string" || newContent.trim() === "") {
+      return res.status(400).json({
+        message: "El contenido del comentario debe ser un texto no vacío.",
+      });
+    }
+
+    const comment = await pubServices.updateCommentInPublication(
+      idPub,
+      idComment,
+      newContent
+    );
+
+    res.status(200).json(comment);
+  } catch (error) {
+    console.error("Error al actualizar comentario", error);
+
+    if (error.message === "Comentario no permitido por lenguaje inapropiado.") {
+      return res.status(400).json({ message: error.message });
+    }
+
+    if (
+      error.message.includes("Comentario no encontrado") ||
+      error.message.includes("Publicación no encontrada")
+    ) {
+      return res.status(404).json({ message: error.message });
+    }
+
+    res.status(500).json({ message: "Error al actualizar el comentario" });
+  }
+};
+
 
 // Controlador para eliminar un comentario
 exports.deleteComment = async (req, res) => {
@@ -201,51 +238,6 @@ exports.deleteComment = async (req, res) => {
     return res
       .status(500)
       .json({ message: "Error inesperado al borrar comentario" });
-  }
-};
-
-//Editar un comentario de una publicacion
-exports.updateComment = async (req, res) => {
-  try {
-    // Obtener los parámetros de la URL
-    const idPub = req.params.idPub; // ID de la publicación
-    const idComment = req.params.idComment; // ID del comentario
-
-    // Obtener el contenido nuevo del cuerpo de la solicitud (debe ser un string)
-    const newContent = req.body.contenido;
-
-    // Verificar que newContent no esté vacío
-    if (typeof newContent !== "string" || newContent.trim() === "") {
-      return res.status(400).json({
-        message: "El contenido del comentario debe ser un texto no vacío.",
-      });
-    }
-
-    // Llamar al servicio que actualiza el comentario
-    const comment = await pubServices.updateCommentInPublication(
-      idPub,
-      idComment,
-      newContent
-    );
-
-    // Si el comentario se actualiza correctamente, devolver la respuesta
-    if (comment) {
-      res.status(200).json(comment); // Usamos 200 en lugar de 201 ya que es una actualización
-    } else {
-      res.status(404).json({ message: "Comentario no encontrado" });
-    }
-  } catch (error) {
-    console.error(error);
-
-    // Si el error proviene del servicio y tiene un mensaje claro, usar ese mensaje
-    if (
-      error.message.includes("Comentario no encontrado") ||
-      error.message.includes("Publicación no encontrada")
-    ) {
-      res.status(404).json({ message: error.message });
-    } else {
-      res.status(500).json({ message: "Error al actualizar el comentario" });
-    }
   }
 };
 

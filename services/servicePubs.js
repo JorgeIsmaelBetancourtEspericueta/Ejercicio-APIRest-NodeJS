@@ -257,12 +257,16 @@ exports.deleteCommentFromPublication = async (pubId, commentIndex) => {
   }
 };
 
-// Actualizar un comentario en una publicación
 exports.updateCommentInPublication = async (pubId, commentId, newContent) => {
   try {
-    // Verificar que newContent sea un string
-    if (typeof newContent !== "string") {
-      throw new Error("El contenido del comentario debe ser un string");
+    // Verificar que newContent sea un string válido
+    if (typeof newContent !== "string" || newContent.trim() === "") {
+      throw new Error("El contenido del comentario debe ser un texto no vacío.");
+    }
+
+    // Validar si el contenido es inapropiado
+    if (validateComment(newContent)) {
+      throw new Error("Comentario no permitido por lenguaje inapropiado.");
     }
 
     // Convertir commentId a número
@@ -311,7 +315,8 @@ exports.updateCommentInPublication = async (pubId, commentId, newContent) => {
       comentarios, // Opcional: devolver lista completa actualizada
     };
   } catch (error) {
-    throw new Error(`Error al actualizar comentario`);
+    console.error("Error al actualizar comentario:", error.message);
+    throw new Error(error.message); // Propagar error con mensaje real
   }
 };
 
