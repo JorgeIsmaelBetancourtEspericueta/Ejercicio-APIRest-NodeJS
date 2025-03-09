@@ -175,36 +175,42 @@ exports.updateComment = async (req, res) => {
     const idComment = req.params.idComment;
     const newContent = req.body.contenido;
 
+    // Validación de contenido vacío
     if (typeof newContent !== "string" || newContent.trim() === "") {
       return res.status(400).json({
         message: "El contenido del comentario debe ser un texto no vacío.",
       });
     }
 
-    const comment = await pubServices.updateCommentInPublication(
+    // Llamada al servicio para actualizar el comentario
+    const result = await pubServices.updateCommentInPublication(
       idPub,
       idComment,
       newContent
     );
 
-    res.status(200).json(comment);
+    // Verifica si la actualización fue exitosa
+    if (result) {
+      res.status(200).json({
+        message: "Comentario actualizado exitosamente",
+        comentarioActualizado: result.comentarioActualizado, // Solo el comentario actualizado
+      });
+    } else {
+      res.status(404).json({ message: "Comentario no encontrado" });
+    }
   } catch (error) {
     console.error("Error al actualizar comentario", error);
 
+    // Manejo de errores específicos
     if (error.message === "Comentario no permitido por lenguaje inapropiado.") {
       return res.status(400).json({ message: error.message });
     }
 
-    if (
-      error.message.includes("Comentario no encontrado") ||
-      error.message.includes("Publicación no encontrada")
-    ) {
-      return res.status(404).json({ message: error.message });
-    }
-
+    // Errores generales
     res.status(500).json({ message: "Error al actualizar el comentario" });
   }
 };
+
 
 
 // Controlador para eliminar un comentario

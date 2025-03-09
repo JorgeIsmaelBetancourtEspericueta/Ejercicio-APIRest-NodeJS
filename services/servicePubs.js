@@ -267,9 +267,10 @@ exports.deleteCommentFromPublication = async (pubId, commentIndex) => {
   }
 };
 
+//Actualizar un comentario
 exports.updateCommentInPublication = async (pubId, commentId, newContent) => {
   try {
-    // Verificar que newContent sea un string válido
+    // Validación de contenido
     if (typeof newContent !== "string" || newContent.trim() === "") {
       throw new Error("El contenido del comentario debe ser un texto no vacío.");
     }
@@ -296,7 +297,7 @@ exports.updateCommentInPublication = async (pubId, commentId, newContent) => {
     const pubData = pubSnapshot.data();
     const comentarios = pubData.comentarios || [];
 
-    // Buscar el comentario por ID numérico
+    // Buscar el comentario por ID
     const commentIndex = comentarios.findIndex(
       (comment) => comment.id === parsedCommentId
     );
@@ -305,30 +306,30 @@ exports.updateCommentInPublication = async (pubId, commentId, newContent) => {
       throw new Error("Comentario no encontrado");
     }
 
-    // Crear copia actualizada del comentario
+    // Crear el comentario actualizado
     const updatedComment = {
       ...comentarios[commentIndex],
-      contenido: newContent, // Asegurarse de que newContent es solo un string
+      contenido: newContent,
       fechaModificacion: new Date().toISOString(),
     };
 
-    // Actualizar el array de comentarios con el comentario modificado
+    // Actualizar los comentarios en Firestore
     comentarios[commentIndex] = updatedComment;
 
-    // Guardar cambios en Firestore
+    // Guardar cambios en la base de datos
     await pubRef.update({ comentarios });
 
-    // Retornar la respuesta con los datos actualizados
+    // Devolver solo los datos relevantes (sin duplicar)
     return {
-      id: pubId,
       comentarioActualizado: updatedComment,
-      comentarios, // Opcional: devolver lista completa actualizada
+      comentarios, // Devolver la lista completa de comentarios
     };
   } catch (error) {
     console.error("Error al actualizar comentario:", error.message);
-    throw new Error(error.message); // Propagar error con mensaje real
+    throw new Error(error.message); // Propagar error con el mensaje real
   }
 };
+
 
 // Actualizar el like en un comentario
 exports.updateLikeComment = async (pubId, commentId, increment = true) => {
