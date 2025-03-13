@@ -2,6 +2,7 @@
 
 **Equipo:**  
 Betancourt Espericueta Jorge Ismael - 21400655  
+Vargas Partida Jorge Luis - 21400786
 
 ## Contenido
 
