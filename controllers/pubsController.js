@@ -175,7 +175,7 @@ exports.updateComment = async (req, res) => {
   try {
     const idPub = req.params.idPub;
     const idComment = req.params.idComment;
-    const newContent = req.body.contenido;
+    const newContent = req.body.content;
 
     if (typeof newContent !== "string" || newContent.trim() === "") {
       return res.status(400).json({
